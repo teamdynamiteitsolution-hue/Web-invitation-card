@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* 12-Layer Stacking Indices */
+  --z-bg: 0;
+  --z-texture: 1;
+  --z-watermark: 2;
+  --z-opening-base: 3;
+  --z-opening-actor: 4;
+  --z-reveal-mask: 5;
+  --z-card: 6;
+  --z-content: 7;
+  --z-decorative: 8;
+  --z-particles: 9;
+  --z-nodes: 10;
+  --z-hud: 11;
+
+  /* Material Depth & Physical Elevation */
+  --shadow-soft-surface: 0 4px 20px -2px rgba(44, 30, 15, 0.08);
+  --shadow-elevated-card: 0 12px 36px -4px rgba(35, 20, 10, 0.16), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-floating-ceremony: 0 24px 64px -8px rgba(28, 15, 5, 0.28), 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-wax-seal: 0 4px 12px rgba(139, 0, 0, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.25);
+  --shadow-inner-emboss: inset 0 2px 4px rgba(0, 0, 0, 0.08), inset 0 -2px 4px rgba(255, 255, 255, 0.6);
+
+  /* Gradients */
+  --gold-foil-grad: linear-gradient(135deg, #d4af37 0%, #f9f0d0 35%, #aa771c 70%, #edd59b 100%);
+  --turmeric-paste-grad: linear-gradient(145deg, #e59e00 0%, #ffc000 50%, #cc7a00 100%);
+}
+
+/* Mobile Safe Areas & Dynamic Viewport */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #f7f3ea;
+  color: #2c2623;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.dvh-screen {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Touch Ergonomics for Scratch & Gestures */
+.touch-canvas {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Custom Ceremonial Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.7);
+}
+
+/* Handdrawn Line Draw-in Keyframes */
+@keyframes drawLine {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawLine 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@layer utilities {
+  @media print {
+    body {
+      display: none !important;
+    }
+  }
+}
