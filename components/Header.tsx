@@ -25,14 +25,14 @@ export async function Header() {
       <Link href="/" className="text-3xl md:text-4xl font-bold text-[#8C4A52]" style={{ fontFamily: 'Noto Serif Bengali, serif' }}>
         উৎসব
       </Link>
-      
+
       <nav className="hidden md:flex items-center gap-8 font-serif text-[#7C7267] text-sm tracking-wide">
         <Link href="/" className="hover:text-[#D4AF37] transition-colors">Home</Link>
         <Link href="/templates" className="hover:text-[#D4AF37] transition-colors">Templates</Link>
         <Link href="/how-it-works" className="hover:text-[#D4AF37] transition-colors">How It Works</Link>
         <Link href="/contact" className="hover:text-[#D4AF37] transition-colors">Contact Us</Link>
       </nav>
-      
+
       <div className="flex items-center gap-4">
         {username ? (
           <Link href={role === "ADMIN" ? "/admin" : "/dashboard"} className="flex items-center gap-2 group">
