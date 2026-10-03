@@ -36,3 +36,6 @@ next-env.d.ts
 # local sqlite database & artifacts
 *.db
 *.db-journal
+
+# scratch test scripts
+/scratch/

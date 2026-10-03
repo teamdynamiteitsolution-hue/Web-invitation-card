@@ -37,7 +37,7 @@ export default function EditClient({ id, invitation, animations }: { id: string,
         })
       });
       if (res.ok) {
-        router.push("/dashboard");
+        router.push("/profile");
       } else {
         alert("Failed to update invitation");
       }
@@ -231,7 +231,7 @@ export default function EditClient({ id, invitation, animations }: { id: string,
         </div>
         
         <div className="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center gap-4">
-          <button onClick={() => router.push("/dashboard")} className="px-6 py-3 rounded-full border border-gray-200 font-bold hover:bg-gray-50 transition-colors">
+          <button onClick={() => router.push("/profile")} className="px-6 py-3 rounded-full border border-gray-200 font-bold hover:bg-gray-50 transition-colors">
             Cancel
           </button>
           <button 

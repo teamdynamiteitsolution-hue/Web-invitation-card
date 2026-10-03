@@ -2,12 +2,15 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Link2, Save, CreditCard, ArrowRight, CheckCircle2, X, PlayCircle, Clock, ShieldCheck } from "lucide-react";
+import { Link2, Save, CreditCard, ArrowRight, CheckCircle2, X, Clock, ShieldCheck } from "lucide-react";
 import DynamicCardExperience from "@/experiences/dynamic-card";
 import EnvelopeRoyal from "@/experiences/envelope-royal";
 import TheatricalCurtain from "@/experiences/theatrical-curtain";
 import MultiScratch from "@/experiences/multi-scratch";
 import ScrollExperience from "@/experiences/scroll-experience/ScrollExperience";
+
+import { resolveCanonicalInvitation } from "@/lib/canonical-invitation";
+import { AudioPlayer } from "@/components/AudioPlayer";
 
 const DURATION_TIERS = [
   { days: 15, label: "15 Days", badge: "Standard", price: 0, desc: "Default link validity" },
@@ -22,7 +25,6 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
   const [selectedDuration, setSelectedDuration] = useState<number>(15);
   const [showPayModal, setShowPayModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<"bkash" | "nagad" | "rocket" | null>(null);
 
   const [isPaying, setIsPaying] = useState(false);
@@ -32,10 +34,14 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
   const durationPrice = DURATION_TIERS.find(t => t.days === selectedDuration)?.price || 0;
   const currentTotal = basePrice + durationPrice;
 
+  // Canonical resolution of customized invitation
+  const canonical = resolveCanonicalInvitation(invitation);
+  const { template: canonicalTemplate, animation: canonicalAnimation, isScroll, experienceType, eventData: canonicalEventData } = canonical;
+
   const handleSaveLater = () => {
     setShowSaveModal(true);
     setTimeout(() => {
-      router.push("/dashboard");
+      router.push("/profile");
     }, 2500);
   };
 
@@ -72,32 +78,35 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
     }
   };
 
-  const expType = (invitation.template?.experienceType || '').toLowerCase();
-  const isScroll = expType === 'scroll' || expType === 'scroll_story' || invitation.template?.slug?.includes('scroll');
-  const parsedEventData = invitation.eventData ? JSON.parse(invitation.eventData) : {};
-
   // Resolve preview component based on template experience type
   let PreviewComponent: any = DynamicCardExperience;
-  if (isScroll) PreviewComponent = ScrollExperience;
-  else if (expType === 'curtain') PreviewComponent = TheatricalCurtain;
-  else if (expType === 'multi_scratch') PreviewComponent = MultiScratch;
-  else if (expType === 'envelope') PreviewComponent = EnvelopeRoyal;
+  if (isScroll || experienceType === 'scroll' || experienceType === 'scroll_story') PreviewComponent = ScrollExperience;
+  else if (experienceType === 'curtain') PreviewComponent = TheatricalCurtain;
+  else if (experienceType === 'multi_scratch') PreviewComponent = MultiScratch;
+  else if (experienceType === 'envelope') PreviewComponent = EnvelopeRoyal;
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-12 md:py-20 flex flex-col lg:flex-row gap-12">
+    <main className="max-w-6xl mx-auto px-4 py-8 md:py-16 flex flex-col lg:flex-row gap-8 lg:gap-12">
       
-      {/* Left side: Preview */}
-      <div className="w-full lg:w-1/2 flex justify-center">
-        <div className="relative w-full max-w-[400px] aspect-[4/5] bg-white rounded-[32px] overflow-hidden shadow-2xl border-4 border-[#D4AF37]/20 flex flex-col items-center p-8 group">
-          <div className="absolute inset-0 bg-[url('/assets/textures/handmade-fiber.webp')] opacity-40 mix-blend-multiply pointer-events-none" />
-          <img 
-            src={invitation.template.previewImageUrl} 
-            alt="Preview" 
-            className="w-full h-full object-contain filter drop-shadow-xl transform group-hover:scale-105 transition-transform duration-700"
+      {/* Left side: Customized Live Preview Card */}
+      <div className="w-full lg:w-1/2 flex flex-col items-center">
+        <div className="text-xs font-bold uppercase tracking-wider text-[#8C4A52] mb-3 flex items-center gap-1.5 self-start sm:self-center">
+          <span>✨ Your Customized Invitation</span>
+        </div>
+        <div className={`relative w-full max-w-[390px] ${
+          isScroll 
+            ? 'h-[500px] overflow-y-auto rounded-[32px] border-4 border-[#D4AF37]/30 shadow-2xl bg-[#FAF8F5] scroll-smooth' 
+            : 'aspect-[4/5] rounded-[32px] overflow-hidden shadow-2xl border-4 border-[#D4AF37]/30 bg-[#FAF8F5]'
+        }`}>
+          <PreviewComponent 
+            template={canonicalTemplate}
+            animation={canonicalAnimation}
+            eventData={canonicalEventData}
+            revealMode="auto"
+            customImage={invitation.customImage || canonicalEventData?.couplePhoto}
+            bgBlur={invitation.bgBlur}
+            skipAnimation={true}
           />
-          <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-             <p className="text-white font-bold text-center" style={{ fontFamily: 'Cinzel, serif' }}>{invitation.title}</p>
-          </div>
         </div>
       </div>
 
@@ -168,56 +177,21 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
         <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
           <button 
             onClick={() => setShowPayModal(true)}
-            className="flex-1 py-4 px-6 rounded-full bg-[#8C4A52] text-white font-bold shadow-elevated-card hover:bg-[#7a3e45] transition-all flex items-center justify-center gap-2"
+            className="flex-1 py-4 px-6 rounded-full bg-[#8C4A52] text-white font-bold shadow-elevated-card hover:bg-[#7a3e45] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             <CreditCard className="w-5 h-5" />
-            Pay &amp; Generate Link
+            Pay Now &amp; Generate Link
           </button>
           
           <button 
             onClick={handleSaveLater}
-            className="flex-1 py-4 px-6 rounded-full bg-white text-[#2C2623] border border-[#D4AF37]/40 font-bold shadow-soft-surface hover:bg-[#F9F0EC] transition-all flex items-center justify-center gap-2"
+            className="flex-1 py-4 px-6 rounded-full bg-white text-[#2C2623] border border-[#D4AF37]/40 font-bold shadow-soft-surface hover:bg-[#F9F0EC] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             <Save className="w-5 h-5 text-[#D4AF37]" />
             Pay Later &amp; Save
           </button>
-
-          <button 
-            onClick={() => setShowPreviewModal(true)}
-            className="w-full sm:w-auto py-4 px-6 rounded-full bg-[#2C2623] text-white font-bold shadow-soft-surface hover:bg-[#1a1614] transition-all flex items-center justify-center gap-2"
-          >
-            <PlayCircle className="w-5 h-5" />
-            Preview
-          </button>
         </div>
       </div>
-
-      {/* Preview Modal */}
-      {showPreviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-8">
-          <button 
-            onClick={() => setShowPreviewModal(false)}
-            className="absolute top-4 right-4 sm:top-8 sm:right-8 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 z-50 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-          <div className={`relative w-full ${
-            isScroll 
-              ? 'max-w-[440px] h-[90vh] max-h-[900px] overflow-y-auto bg-[#FAF8F5] rounded-[32px] shadow-2xl border-4 border-[#D4AF37]/40 scroll-smooth'
-              : 'max-w-[412px] h-[100dvh] max-h-[915px] mx-auto rounded-[32px] overflow-hidden shadow-2xl bg-black'
-          }`}>
-            <PreviewComponent 
-              template={invitation.template}
-              animation={invitation.animation}
-              eventData={parsedEventData}
-              revealMode={invitation.revealMode || "auto"}
-              customImage={invitation.customImage}
-              bgBlur={invitation.bgBlur}
-              skipAnimation={false}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Pay Later Modal */}
       {showSaveModal && (
@@ -230,7 +204,7 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
             <p className="text-[#7C7267] font-serif italic mb-6">
               Your card has been saved to your profile&apos;s Saved Cards option.
             </p>
-            <p className="text-sm font-bold text-gray-400">Redirecting to dashboard...</p>
+            <p className="text-sm font-bold text-gray-400">Redirecting to profile...</p>
           </div>
         </div>
       )}

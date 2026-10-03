@@ -2,19 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-import { Sparkles, ArrowRight, PlayCircle, ArrowRightCircle } from "lucide-react";
+import { Sparkles, ArrowRight, PlayCircle, ArrowRightCircle, Check } from "lucide-react";
 import { Footer } from "@/components/Footer";
 
-const ReactCompareSlider = dynamic(
-  () => import('react-compare-slider').then(mod => mod.ReactCompareSlider),
-  { ssr: false }
-);
-
-const ReactCompareSliderImage = dynamic(
-  () => import('react-compare-slider').then(mod => mod.ReactCompareSliderImage),
-  { ssr: false }
-);
 
 export default function HomeClient({ categories, templates, animations }: { categories: any[], templates: any[], animations: any[] }) {
   const featuredTemplates = templates || [];
@@ -23,25 +13,25 @@ export default function HomeClient({ categories, templates, animations }: { cate
     <main className="relative z-10 w-full overflow-x-hidden">
       
       {/* Hero Section (Original Auto-Scrolling Phone) */}
-      <section className="relative w-full flex items-center justify-center pt-24 pb-20 px-6">
+      <section className="relative w-full flex items-center justify-center pt-4 sm:pt-10 md:pt-16 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6">
         <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#FFF9F2] to-[#FAF8F5]"></div>
         
-        <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
-          <div className="flex-1 text-center lg:text-left pt-12 lg:pt-0">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#D4AF37]/40 bg-[#F9F0EC]/80 text-[#8C4A52] text-xs font-bold tracking-widest uppercase mb-8 shadow-sm backdrop-blur-sm">
+        <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-8 sm:gap-12 lg:gap-16">
+          <div className="flex-1 text-center lg:text-left pt-2 lg:pt-0">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full border border-[#D4AF37]/40 bg-[#F9F0EC]/80 text-[#8C4A52] text-[11px] sm:text-xs font-bold tracking-widest uppercase mb-4 sm:mb-8 shadow-sm backdrop-blur-sm">
               <Sparkles className="w-3 h-3" />
               <span>Premium Invitation Studio</span>
             </div>
             
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-[#2C2623] mb-6 leading-[1.1]" style={{ fontFamily: 'Cinzel, serif' }}>
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#2C2623] mb-4 sm:mb-6 leading-[1.15]" style={{ fontFamily: 'Cinzel, serif' }}>
               Digital Royal Invitation Collections
             </h1>
             
-            <h2 className="text-xl md:text-2xl font-serif text-[#7C7267] mb-8 italic" style={{ fontFamily: 'Playfair Display, serif' }}>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-serif text-[#7C7267] mb-4 sm:mb-8 italic" style={{ fontFamily: 'Playfair Display, serif' }}>
               Traditional Moments • Modern Touch • Digital Forever
             </h2>
             
-            <p className="text-base text-[#7C7267] max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed">
+            <p className="text-sm sm:text-base text-[#7C7267] max-w-xl mx-auto lg:mx-0 mb-6 sm:mb-10 leading-relaxed">
               Transform your most precious life events into immersive digital experiences. Beautifully art-directed, culturally resonant, and highly interactive ceremonial invitations.
             </p>
 
@@ -143,102 +133,10 @@ export default function HomeClient({ categories, templates, animations }: { cate
         ))}
       </section>
 
-      {/* Transformation Section (React Compare Slider) */}
-      <section className="py-24 px-6 bg-[#2C2623] relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/assets/textures/handmade-fiber.webp')] opacity-10 mix-blend-overlay" />
-        
-        <div className="max-w-7xl mx-auto relative z-10 flex flex-col lg:flex-row items-center gap-16">
-          <div className="flex-1 text-center lg:text-left text-white">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ fontFamily: 'Cinzel, serif' }}>
-              See The Transformation
-            </h2>
-            <p className="text-gray-300 font-serif text-lg mb-8 italic">
-              Slide to see how a boring static image turns into an immersive, premium digital experience. Interactive cards boost RSVP rates by over 40%.
-            </p>
-            <Link href="/create" className="inline-flex px-8 py-4 rounded-full bg-[#D4AF37] text-[#2C2623] font-bold hover:bg-[#c09d2f] transition-colors gap-3 items-center">
-              Try It Yourself <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
 
-          <div className="flex-1 w-full flex justify-center perspective-1000">
-            <div className="relative w-full max-w-[340px] aspect-[9/19] rounded-[40px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-8 border-gray-800 overflow-hidden transform rotate-y-[-5deg] rotate-x-[2deg] hover:rotate-y-0 hover:rotate-x-0 transition-transform duration-700">
-               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-50"></div>
-               
-               <ReactCompareSlider
-                  className="w-full h-full"
-                  itemOne={<ReactCompareSliderImage src="/assets/categories/wedding.webp" alt="Boring Static Card" className="object-cover w-full h-full filter grayscale contrast-75 brightness-75" />}
-                   itemTwo={
-                     <div className="w-full h-full relative overflow-hidden bg-[#1F1915] text-[#FAF6F0] flex flex-col justify-between p-5 select-none">
-                       {/* Background Texture & Royal Glow */}
-                       <div className="absolute inset-0 bg-[url('/assets/textures/handmade-fiber.webp')] opacity-20 mix-blend-overlay" />
-                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-[#D4AF37]/25 via-transparent to-transparent pointer-events-none" />
-                       
-                       {/* Gold Filigree Double Border */}
-                       <div className="absolute inset-3 border-2 border-[#D4AF37]/60 rounded-[28px] pointer-events-none" />
-                       <div className="absolute inset-4 border border-[#D4AF37]/30 rounded-[24px] pointer-events-none" />
-                       
-                       {/* Corner Ornaments */}
-                       <div className="absolute top-5 left-5 text-[#D4AF37] text-xs select-none">❖</div>
-                       <div className="absolute top-5 right-5 text-[#D4AF37] text-xs select-none">❖</div>
-                       <div className="absolute bottom-5 left-5 text-[#D4AF37] text-xs select-none">❖</div>
-                       <div className="absolute bottom-5 right-5 text-[#D4AF37] text-xs select-none">❖</div>
-
-                       {/* Top Monogram */}
-                       <div className="relative z-10 pt-4 flex flex-col items-center">
-                         <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#8C4A52] via-[#D4AF37] to-[#8C4A52] shadow-md mb-2">
-                           <div className="w-full h-full rounded-full bg-[#1F1915] border border-[#D4AF37] flex items-center justify-center">
-                             <span className="font-serif text-xs font-bold text-[#D4AF37] tracking-widest">J • L</span>
-                           </div>
-                         </div>
-                         <span className="text-[8px] uppercase tracking-[0.3em] text-[#D4AF37] font-bold">
-                           The Wedding Of
-                         </span>
-                       </div>
-
-                       {/* Center Couple Names & Details */}
-                       <div className="relative z-10 text-center my-auto py-2">
-                         <h3 className="text-xl font-bold text-white tracking-wide leading-tight" style={{ fontFamily: 'Cinzel, serif' }}>
-                           John
-                         </h3>
-                         <div className="flex items-center justify-center gap-2 my-1">
-                           <span className="w-6 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
-                           <span className="text-sm italic text-[#D4AF37] font-serif">&amp;</span>
-                           <span className="w-6 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
-                         </div>
-                         <h3 className="text-xl font-bold text-white tracking-wide leading-tight" style={{ fontFamily: 'Cinzel, serif' }}>
-                           Lary
-                         </h3>
-
-                         <div className="mt-3 inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-[#D4AF37]/50 shadow-sm">
-                           <span className="text-[9px] font-bold text-[#D4AF37] tracking-wider uppercase">Saturday, 14 June</span>
-                         </div>
-                       </div>
-
-                       {/* Bottom Venue & Interactive Badge */}
-                       <div className="relative z-10 pb-3 flex flex-col items-center text-center">
-                         <p className="text-[9px] text-stone-300 font-serif max-w-[200px] mb-2 truncate">
-                           The Royal Palace Grand Ballroom
-                         </p>
-                         <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#8C4A52] to-[#70353C] text-white px-3.5 py-1.5 rounded-full border border-[#D4AF37] shadow-lg text-[9px] font-bold tracking-wider uppercase animate-pulse">
-                           <Sparkles className="w-3 h-3 text-amber-200" />
-                           <span>Interactive Experience</span>
-                         </div>
-                       </div>
-                     </div>
-                   }
-               />
-               <div className="absolute bottom-6 inset-x-0 text-center pointer-events-none z-50">
-                  <span className="bg-black/80 backdrop-blur-md text-white text-[10px] font-bold px-4 py-2 rounded-full tracking-[0.2em] uppercase shadow-lg border border-white/20">
-                    Drag to Transform
-                  </span>
-               </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Beautiful Themes Section */}
-      <section className="py-24 px-6 bg-[#FAF8F5] relative">
+      <section id="themes" className="py-16 sm:py-24 px-6 bg-[#FAF8F5] relative">
         <div className="max-w-screen-2xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#D4AF37]/40 bg-white text-[#8C4A52] text-xs font-bold mb-6">
@@ -349,113 +247,7 @@ export default function HomeClient({ categories, templates, animations }: { cate
 
 
 
-      {/* Why Go Digital Section */}
-      <section className="py-24 px-6 bg-[#FAF8F5] relative">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#D4AF37]/40 bg-white text-[#8C4A52] text-xs font-bold mb-6">
-              <Sparkles className="w-3 h-3" />
-              <span>Paper vs Digital</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-[#2C2623]" style={{ fontFamily: 'Cinzel, serif' }}>
-              Why go digital?
-            </h2>
-            <p className="text-[#7C7267] font-serif text-lg max-w-2xl mx-auto mb-10">
-              Save money, time, and the planet — while giving your guests a stunning interactive experience they'll actually love.
-            </p>
-          </div>
 
-          <div className="bg-white rounded-[24px] border border-[#D4AF37]/20 shadow-sm overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#D4AF37]/20">
-                  <th className="p-6 text-gray-500 font-serif font-normal">Feature</th>
-                  <th className="p-6 text-gray-500 font-bold text-center border-l border-r border-[#D4AF37]/10 bg-gray-50/50">📄 Paper Invitation</th>
-                  <th className="p-6 text-[#D4AF37] font-bold text-center bg-[#FAF8F5]">✨ Utsab Digital</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm font-serif">
-                <tr className="border-b border-gray-100">
-                  <td className="p-6 text-gray-700 font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-[#D4AF37]" /> Cost</td>
-                  <td className="p-6 text-gray-500 text-center border-l border-r border-gray-100 bg-gray-50/50">
-                    <span className="text-red-400 mr-2">✕</span> ৳10,000 - ৳50,000+
-                  </td>
-                  <td className="p-6 text-green-700 text-center font-bold bg-[#FAF8F5]">
-                    <span className="text-green-500 mr-2">✓</span> From ৳500 one-time
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-6 text-gray-700 font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-[#D4AF37]" /> Time to create</td>
-                  <td className="p-6 text-gray-500 text-center border-l border-r border-gray-100 bg-gray-50/50">
-                    <span className="text-red-400 mr-2">✕</span> 4 - 8 weeks
-                  </td>
-                  <td className="p-6 text-green-700 text-center font-bold bg-[#FAF8F5]">
-                    <span className="text-green-500 mr-2">✓</span> Ready in minutes
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-6 text-gray-700 font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-[#D4AF37]" /> Guest tracking & RSVP</td>
-                  <td className="p-6 text-gray-500 text-center border-l border-r border-gray-100 bg-gray-50/50">
-                    <span className="text-red-400 mr-2">✕</span> Manual spreadsheets
-                  </td>
-                  <td className="p-6 text-green-700 text-center font-bold bg-[#FAF8F5]">
-                    <span className="text-green-500 mr-2">✓</span> Automatic dashboard
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-6 text-gray-700 font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-[#D4AF37]" /> Languages</td>
-                  <td className="p-6 text-gray-500 text-center border-l border-r border-gray-100 bg-gray-50/50">
-                    <span className="text-red-400 mr-2">✕</span> One per set
-                  </td>
-                  <td className="p-6 text-green-700 text-center font-bold bg-[#FAF8F5]">
-                    <span className="text-green-500 mr-2">✓</span> Multiple languages
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-6 text-gray-700 font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-[#D4AF37]" /> Updates & changes</td>
-                  <td className="p-6 text-gray-500 text-center border-l border-r border-gray-100 bg-gray-50/50">
-                    <span className="text-red-400 mr-2">✕</span> Reprint everything
-                  </td>
-                  <td className="p-6 text-green-700 text-center font-bold bg-[#FAF8F5]">
-                    <span className="text-green-500 mr-2">✓</span> Update in real-time
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-6 text-gray-700 font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-[#D4AF37]" /> Delivery</td>
-                  <td className="p-6 text-gray-500 text-center border-l border-r border-gray-100 bg-gray-50/50">
-                    <span className="text-red-400 mr-2">✕</span> Postal service / Hand Delivery
-                  </td>
-                  <td className="p-6 text-green-700 text-center font-bold bg-[#FAF8F5]">
-                    <span className="text-green-500 mr-2">✓</span> Instant via link
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-6 text-gray-700 font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-[#D4AF37]" /> Mobile friendly</td>
-                  <td className="p-6 text-gray-500 text-center border-l border-r border-gray-100 bg-gray-50/50">
-                    <span className="text-red-400 mr-2">✕</span> N/A
-                  </td>
-                  <td className="p-6 text-green-700 text-center font-bold bg-[#FAF8F5]">
-                    <span className="text-green-500 mr-2">✓</span> Perfect on any device
-                  </td>
-                </tr>
-                <tr>
-                  <td className="p-6 text-gray-700 font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-[#D4AF37]" /> Eco-friendly</td>
-                  <td className="p-6 text-gray-500 text-center border-l border-r border-gray-100 bg-gray-50/50">
-                    <span className="text-red-400 mr-2">✕</span> Paper & ink waste
-                  </td>
-                  <td className="p-6 text-green-700 text-center font-bold bg-[#FAF8F5]">
-                    <span className="text-green-500 mr-2">✓</span> 100% digital & green
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div className="text-center mt-8 text-gray-500 text-sm font-serif">
-            Save up to <strong className="text-gray-800">৳25,000+</strong> compared to traditional paper invitations
-          </div>
-        </div>
-      </section>
 
       {/* Complete Control Section */}
       <section className="py-24 px-6 bg-[#FAF8F5] relative text-center">
@@ -479,37 +271,12 @@ export default function HomeClient({ categories, templates, animations }: { cate
         </div>
       </section>
 
-      {/* Pre-footer CTA Banner (Updated to match Gold design) */}
-      <section className="py-24 px-6 bg-[#FAF8F5] relative overflow-hidden text-center flex justify-center">
-        <div className="bg-gradient-to-br from-[#d4bc72] to-[#b39542] rounded-[32px] p-12 md:p-16 max-w-4xl w-full text-white shadow-xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/assets/textures/handmade-fiber.webp')] opacity-10 mix-blend-overlay" />
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 border border-white/30 text-white text-xs font-bold mb-6 backdrop-blur-sm">
-              <Sparkles className="w-3 h-3" />
-              <span>Sale — Was ৳2000, Now only ৳1000</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ fontFamily: 'Cinzel, serif' }}>
-              Ready to Create Something Beautiful?
-            </h2>
-            <p className="text-white/90 font-serif text-lg mb-10">
-              Join hundreds of happy couples who chose our invitations
-            </p>
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <Link href="/create" className="inline-flex px-8 py-4 rounded-xl bg-[#FAF8F5] text-[#b39542] font-bold text-lg hover:scale-105 transition-all shadow-lg items-center gap-2">
-                <Sparkles className="w-5 h-5" /> Get VIP Access — ৳1000 &rarr;
-              </Link>
-              <Link href="#pricing" className="inline-flex px-8 py-4 text-white font-bold text-lg hover:underline transition-all items-center gap-2">
-                <Sparkles className="w-5 h-5" /> Compare Packages
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* How It Works Section */}
-      <section className="py-24 px-6 bg-white relative">
+      <section id="how-it-works" className="py-20 sm:py-24 px-6 bg-white relative">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
+          <div className="text-center mb-16 sm:mb-20">
             <h2 className="text-4xl md:text-5xl font-bold text-[#2C2623] mb-4" style={{ fontFamily: 'Cinzel, serif' }}>
               How It Works
             </h2>
@@ -537,6 +304,8 @@ export default function HomeClient({ categories, templates, animations }: { cate
           </div>
         </div>
       </section>
+
+
 
       {/* Testimonials */}
       <section className="py-24 px-6 bg-[#1A1614] relative overflow-hidden">

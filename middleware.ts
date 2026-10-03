@@ -6,7 +6,7 @@ export async function middleware(req: NextRequest) {
   const token = req.cookies.get("auth_token")?.value;
   const { pathname } = req.nextUrl;
 
-  const isProtectedPath = pathname.startsWith("/create") || pathname.startsWith("/dashboard") || pathname.startsWith("/checkout");
+  const isProtectedPath = pathname.startsWith("/create") || pathname.startsWith("/profile") || pathname.startsWith("/checkout");
 
   if (isProtectedPath) {
     if (!token) {
@@ -30,5 +30,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/create/:path*", "/create", "/dashboard/:path*", "/dashboard", "/checkout/:path*"],
+  matcher: ["/create/:path*", "/create", "/profile/:path*", "/profile", "/checkout/:path*"],
 };

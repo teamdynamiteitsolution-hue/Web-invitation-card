@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Shield, Users, Tag, Loader2, Save, LayoutTemplate, PlayCircle, Clock, Edit3, CheckCircle2, LogOut, MessageSquare, ChevronDown, ChevronUp, Plus, Trash2, X } from "lucide-react";
+import { Shield, Users, Tag, Loader2, Save, LayoutTemplate, PlayCircle, Clock, Edit3, CheckCircle2, LogOut, MessageSquare, ChevronDown, ChevronUp, Plus, Trash2, X, Music, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
 
 type Tab = "cards" | "animations" | "durations" | "users" | "messages";
@@ -29,6 +29,13 @@ export default function AdminDashboard() {
     price: string;
     previewImageUrl: string;
     experienceType: string;
+    music?: {
+      url: string;
+      name?: string;
+      loop?: boolean;
+      volume?: number;
+      enabled?: boolean;
+    } | null;
   } | null>(null);
 
   // Add / Edit Animation Modal State
@@ -142,6 +149,7 @@ export default function AdminDashboard() {
         price: cardModal.price,
         previewImageUrl: cardModal.previewImageUrl || '/assets/Cards/card 1.png',
         experienceType: cardModal.experienceType || 'dynamic_card',
+        music: cardModal.music ?? null,
       };
       if (cardModal.isEditing) {
         payload.id = cardModal.id;
@@ -345,16 +353,21 @@ export default function AdminDashboard() {
                       <div className="mt-auto flex flex-col gap-2">
                         <div className="flex gap-2">
                           <button 
-                            onClick={() => setCardModal({
-                              isOpen: true,
-                              isEditing: true,
-                              id: t.id,
-                              name: t.name,
-                              categoryId: t.category?.id || data.categories[0]?.id || "",
-                              price: t.price.toString(),
-                              previewImageUrl: t.previewImageUrl,
-                              experienceType: t.experienceType || "dynamic_card"
-                            })}
+                            onClick={() => {
+                              let music = null;
+                              try { music = JSON.parse(t.assetManifest || "{}")?.music; } catch {}
+                              setCardModal({
+                                isOpen: true,
+                                isEditing: true,
+                                id: t.id,
+                                name: t.name,
+                                categoryId: t.category?.id || data.categories[0]?.id || "",
+                                price: t.price.toString(),
+                                previewImageUrl: t.previewImageUrl,
+                                experienceType: t.experienceType || "dynamic_card",
+                                music: music || null
+                              });
+                            }}
                             className="flex-1 py-2 rounded-xl bg-[#8C4A52] text-white font-bold flex items-center justify-center gap-1.5 hover:bg-[#7a3e45] transition-colors text-xs shadow-sm"
                           >
                             <Edit3 className="w-3.5 h-3.5" /> Edit Card
@@ -743,6 +756,112 @@ export default function AdminDashboard() {
                       />
                     </label>
                   </div>
+                </div>
+
+                {/* Background Music Management Sector */}
+                <div className="pt-3 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-[#2C2623] uppercase tracking-wide flex items-center gap-1.5">
+                      <Music className="w-3.5 h-3.5 text-[#8C4A52]" />
+                      <span>Background Ceremonial Music</span>
+                    </label>
+                    {cardModal.music?.url && (
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        Music Configured
+                      </span>
+                    )}
+                  </div>
+
+                  {cardModal.music?.url ? (
+                    <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#D4AF37]/30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Music className="w-4 h-4 text-[#8C4A52]" />
+                          <span className="text-xs font-bold text-[#2C2623] truncate max-w-[200px]">
+                            {cardModal.music.name || "Ceremonial Track"}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCardModal(prev => prev ? { ...prev, music: null } : null)}
+                          className="text-[11px] font-bold text-red-600 hover:text-red-700 px-2 py-0.5 rounded bg-red-50 hover:bg-red-100 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+
+                      {/* Working HTML5 Audio Player */}
+                      <audio controls src={cardModal.music.url} className="w-full h-8" />
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-gray-500 uppercase">Track Name</label>
+                          <input
+                            type="text"
+                            value={cardModal.music.name || ""}
+                            onChange={(e) => setCardModal(prev => prev ? {
+                              ...prev,
+                              music: { ...(prev.music || { url: "" }), name: e.target.value }
+                            } : null)}
+                            placeholder="e.g. Shehnai Melody"
+                            className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs bg-white"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-3">
+                          <input
+                            type="checkbox"
+                            id="adminMusicEnabled"
+                            checked={cardModal.music.enabled !== false}
+                            onChange={(e) => setCardModal(prev => prev ? {
+                              ...prev,
+                              music: { ...(prev.music || { url: "" }), enabled: e.target.checked }
+                            } : null)}
+                            className="w-4 h-4 rounded text-[#8C4A52]"
+                          />
+                          <label htmlFor="adminMusicEnabled" className="text-xs font-semibold text-gray-700">
+                            Enable by Default
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="block cursor-pointer">
+                      <div className="w-full py-3 px-4 border-2 border-dashed border-[#D4AF37]/40 rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-[#7C7267] hover:bg-[#F9F0EC] transition-colors">
+                        {uploadingFile ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-[#8C4A52]" />
+                        ) : (
+                          <>
+                            <Music className="w-4 h-4 text-[#8C4A52]" />
+                            <span>Upload Audio File (.mp3, .wav, .m4a)</span>
+                          </>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = await uploadFile(file, 'audio');
+                            if (url) {
+                              setCardModal(prev => prev ? {
+                                ...prev,
+                                music: {
+                                  url,
+                                  name: file.name.replace(/\.[^/.]+$/, ""),
+                                  loop: true,
+                                  volume: 0.8,
+                                  enabled: true
+                                }
+                              } : null);
+                            }
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
                 </div>
 
                 <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">

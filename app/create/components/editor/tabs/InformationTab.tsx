@@ -9,7 +9,7 @@ export const InformationTab = ({ dbData }: { dbData?: any }) => {
   const { eventData, updateEventData, selectedTemplateId, layoutPresetId } = useEditor();
 
   const currentTemplate = dbData?.templates?.find((t: any) => t.id === selectedTemplateId);
-  const def = getTemplateById(currentTemplate?.slug) || getTemplateById(selectedTemplateId);
+  const def = getTemplateById(currentTemplate?.slug) || getTemplateById(selectedTemplateId) || getTemplateById(eventData?.templateSlug) || getTemplateById(eventData?.templateDefinitionId);
 
   // Intelligently compute active preset from editor state
   const activePreset = layoutPresetId || def?.compositionId || 'classic_editorial';
@@ -20,49 +20,58 @@ export const InformationTab = ({ dbData }: { dbData?: any }) => {
 
   let imageSlots: { id: string; label: string; description: string; required: boolean }[] = [];
 
-  if (isBirthday) {
+  if (def && Array.isArray(def.imageSlots) && def.imageSlots.length > 0) {
+    imageSlots = def.imageSlots.map(s => ({
+      id: s.id,
+      label: s.label,
+      description: s.description || '',
+      required: !!s.required
+    }));
+  } else if (isBirthday) {
     if (isScrollStyle) {
-      // Birthday in Scroll Experience: Star Portrait + 4 Gallery Photos (Total 5 slots)
       imageSlots = [
-        { id: 'couplePhoto', label: 'Birthday Star Portrait (মূল ছবি)', description: 'Main portrait for the birthday star', required: true },
-        { id: 'gallery1', label: 'Gallery Photo 1', description: 'Memories & moments photo gallery', required: false },
-        { id: 'gallery2', label: 'Gallery Photo 2', description: 'Memories & moments photo gallery', required: false },
-        { id: 'gallery3', label: 'Gallery Photo 3', description: 'Memories & moments photo gallery', required: false },
-        { id: 'gallery4', label: 'Gallery Photo 4', description: 'Memories & moments photo gallery', required: false },
+        { id: 'couplePhoto', label: 'Birthday Star Portrait', description: 'Main portrait for the birthday star', required: true },
+        { id: 'gallery1', label: 'Gallery 1', description: 'Memories & moments photo gallery', required: false },
+        { id: 'gallery2', label: 'Gallery 2', description: 'Memories & moments photo gallery', required: false },
+        { id: 'gallery3', label: 'Gallery 3', description: 'Memories & moments photo gallery', required: false },
+        { id: 'gallery4', label: 'Gallery 4', description: 'Memories & moments photo gallery', required: false },
       ];
     } else {
-      // Birthday in Single Card: Single Celebrant Portrait
+      imageSlots = (def?.imageSlots && def.imageSlots.length > 0)
+        ? [{ id: 'couplePhoto', label: 'Birthday Star Photo', description: 'Main portrait for the birthday star', required: true }]
+        : [];
+    }
+  } else if (isScrollStyle) {
+    if (currentTemplate?.slug === 'corporate-scroll' || eventData.category === 'corporate') {
       imageSlots = [
-        { id: 'couplePhoto', label: 'Birthday Star Photo', description: 'Main portrait for the birthday star', required: true }
+        { id: 'couplePhoto', label: 'Couple / Hero Photo', description: 'Main summit banner or executive photo', required: false },
+        { id: 'gallery1', label: 'Gallery 1', description: 'Interactive moments gallery', required: false },
+        { id: 'gallery2', label: 'Gallery 2', description: 'Interactive moments gallery', required: false },
+        { id: 'gallery3', label: 'Gallery 3', description: 'Interactive moments gallery', required: false },
+        { id: 'gallery4', label: 'Gallery 4', description: 'Interactive moments gallery', required: false },
+      ];
+    } else {
+      imageSlots = [
+        { id: 'bridePhoto', label: 'Bride Photo', description: 'The Happy Couple section', required: true },
+        { id: 'groomPhoto', label: 'Groom Photo', description: 'The Happy Couple section', required: true },
+        { id: 'couplePhoto', label: 'Couple / Hero Photo', description: 'Top opening hero presentation', required: false },
+        { id: 'gallery1', label: 'Gallery 1', description: 'Interactive moments gallery', required: false },
+        { id: 'gallery2', label: 'Gallery 2', description: 'Interactive moments gallery', required: false },
+        { id: 'gallery3', label: 'Gallery 3', description: 'Interactive moments gallery', required: false },
+        { id: 'gallery4', label: 'Gallery 4', description: 'Interactive moments gallery', required: false },
       ];
     }
   } else if (isSplitStyle) {
-    // Split Couple: 2 Individual Photo Slots
     imageSlots = [
-      { id: 'groomPhoto', label: 'Groom Photo (বরের ছবি)', description: 'Left arch frame portrait', required: true },
-      { id: 'bridePhoto', label: 'Bride Photo (কনের ছবি)', description: 'Right arch frame portrait', required: true },
-    ];
-  } else if (isScrollStyle) {
-    // Wedding/Holud/Reception in Scroll Experience: Full Story Media Set
-    imageSlots = [
-      { id: 'groomPhoto', label: 'Groom Photo (বরের ছবি)', description: 'The Happy Couple section', required: true },
-      { id: 'bridePhoto', label: 'Bride Photo (কনের ছবি)', description: 'The Happy Couple section', required: true },
-      { id: 'couplePhoto', label: 'Hero Couple Photo (Optional)', description: 'Top opening hero presentation', required: false },
-      { id: 'gallery1', label: 'Gallery Photo 1', description: 'Interactive moments gallery', required: false },
-      { id: 'gallery2', label: 'Gallery Photo 2', description: 'Interactive moments gallery', required: false },
-      { id: 'gallery3', label: 'Gallery Photo 3', description: 'Interactive moments gallery', required: false },
-      { id: 'gallery4', label: 'Gallery Photo 4', description: 'Interactive moments gallery', required: false },
+      { id: 'groomPhoto', label: 'Groom Photo', description: 'Left arch frame portrait', required: true },
+      { id: 'bridePhoto', label: 'Bride Photo', description: 'Right arch frame portrait', required: true },
     ];
   } else if (isArchStyle) {
-    // Arch Portrait / Cinematic
     imageSlots = [
-      { id: 'couplePhoto', label: 'Couple Photo / Main Portrait', description: 'Framed inside elegant architectural arch', required: true }
+      { id: 'couplePhoto', label: 'Couple / Hero Photo', description: 'Framed inside elegant architectural arch', required: true }
     ];
   } else {
-    // Other Classic Card Styles
-    imageSlots = [
-      { id: 'couplePhoto', label: 'Couple Photo (Optional)', description: 'Portrait for your card', required: false }
-    ];
+    imageSlots = [];
   }
 
   const datePickerRef = useRef<HTMLInputElement>(null);
@@ -123,38 +132,38 @@ export const InformationTab = ({ dbData }: { dbData?: any }) => {
         <p className="text-sm text-[#7C7267]">
           {def?.name ? `Editing details for ${def.name}` : 'Fill in the event details'}
         </p>
-      </div>
+      </div>      <div className="space-y-5">
+        {/* ============================================================== */}
+        {/* 01. EVENT CATEGORY SELECTOR (ONLY FOR SINGLE CARDS)            */}
+        {/* ============================================================== */}
+        {!isScrollStyle && (
+          <div className="bg-stone-50/80 p-3 rounded-2xl border border-[#D4AF37]/30 mb-6">
+            <label className="block text-[11px] font-bold text-[#8C4A52] uppercase tracking-wider mb-2">
+              Select Event Category
+            </label>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              {categories.map((cat) => {
+                const isSelected = currentCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleCategorySelect(cat.id, cat.defaultLabel)}
+                    className={`flex flex-col items-center justify-center p-2 rounded-xl text-xs font-semibold transition-all border ${
+                      isSelected
+                        ? 'bg-[#8C4A52] text-white border-[#8C4A52] shadow-sm scale-102'
+                        : 'bg-white text-[#2C2623] border-[#D4AF37]/30 hover:border-[#8C4A52]/50 hover:bg-[#F9F0EC]/50'
+                    }`}
+                  >
+                    <span className="text-base mb-1">{cat.icon}</span>
+                    <span className="text-[10px] text-center whitespace-nowrap leading-tight">{cat.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-      {/* ============================================================== */}
-      {/* 01. EVENT CATEGORY SELECTOR                                    */}
-      {/* ============================================================== */}
-      <div className="bg-stone-50/80 p-3 rounded-2xl border border-[#D4AF37]/30">
-        <label className="block text-[11px] font-bold text-[#8C4A52] uppercase tracking-wider mb-2">
-          Select Event Category
-        </label>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-          {categories.map((cat) => {
-            const isSelected = currentCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => handleCategorySelect(cat.id, cat.defaultLabel)}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl text-xs font-semibold transition-all border ${
-                  isSelected
-                    ? 'bg-[#8C4A52] text-white border-[#8C4A52] shadow-sm scale-102'
-                    : 'bg-white text-[#2C2623] border-[#D4AF37]/30 hover:border-[#8C4A52]/50 hover:bg-[#F9F0EC]/50'
-                }`}
-              >
-                <span className="text-base mb-1">{cat.icon}</span>
-                <span className="text-[10px] text-center whitespace-nowrap leading-tight">{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="space-y-5">
         {/* Event Label / Top Heading */}
         <div>
           <label className="block text-xs font-bold text-[#2C2623] uppercase tracking-wide mb-1">
@@ -394,15 +403,16 @@ export const InformationTab = ({ dbData }: { dbData?: any }) => {
             <label className="block text-xs font-bold text-[#2C2623] uppercase tracking-wide">
               {currentCategory === 'birthday' ? 'Birthday Wishes / Message' : 'Invitation Message / Story'}
             </label>
-            <label className="flex items-center gap-2 cursor-pointer select-none">
+            <label className={`flex items-center gap-2 ${isScrollStyle ? 'cursor-default' : 'cursor-pointer'} select-none`}>
               <span className="text-[11px] font-semibold text-[#8C4A52]">
-                Show on Card
+                {isScrollStyle ? 'Always on in Scroll Story' : 'Show on Card'}
               </span>
               <input 
                 type="checkbox"
-                checked={!!eventData.showInvitationMessage}
+                checked={isScrollStyle ? true : !!eventData.showInvitationMessage}
+                disabled={isScrollStyle}
                 onChange={(e) => updateEventData({ showInvitationMessage: e.target.checked })}
-                className="w-4 h-4 rounded border-gray-300 text-[#8C4A52] focus:ring-[#8C4A52] cursor-pointer"
+                className={`w-4 h-4 rounded border-gray-300 text-[#8C4A52] focus:ring-[#8C4A52] ${isScrollStyle ? 'opacity-80 cursor-not-allowed accent-[#8C4A52]' : 'cursor-pointer'}`}
               />
             </label>
           </div>
@@ -414,7 +424,9 @@ export const InformationTab = ({ dbData }: { dbData?: any }) => {
             className="w-full px-3 py-2 bg-white border border-[#D4AF37]/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] font-serif text-xs leading-relaxed"
           />
           <p className="text-[10px] text-[#7C7267] italic">
-            {eventData.showInvitationMessage 
+            {isScrollStyle
+              ? "✓ Proclamation and story are permanently featured in this scroll experience."
+              : eventData.showInvitationMessage 
               ? "✓ Message will be rendered in the center of your card." 
               : "Message is saved and will appear in details/story."}
           </p>

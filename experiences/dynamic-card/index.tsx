@@ -15,9 +15,16 @@ export default function DynamicCardExperience({ template, animation, eventData, 
   const nodesRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const manifest = template?.assetManifest ? JSON.parse(template.assetManifest) : {};
-  const layout = template?.layoutConfig ? JSON.parse(template.layoutConfig) : { nodes: [] };
-  const cardAsset = manifest.cardAsset || "";
+  const manifest = template?.assetManifest 
+    ? (typeof template.assetManifest === 'string' ? JSON.parse(template.assetManifest) : template.assetManifest) 
+    : {};
+  const layout = template?.layoutConfig 
+    ? (typeof template.layoutConfig === 'string' ? JSON.parse(template.layoutConfig) : template.layoutConfig) 
+    : { nodes: [] };
+  // Fallback to template preview image only when manifest.cardAsset is missing or invalid
+  const cardAsset = (manifest.cardAsset && typeof manifest.cardAsset === 'string' && manifest.cardAsset.trim() !== '')
+    ? manifest.cardAsset
+    : (template?.previewImageUrl || "/assets/Cards/card 1.png");
   const decorations = manifest.decorations || [];
   const videoUrl = animation?.videoUrl;
 

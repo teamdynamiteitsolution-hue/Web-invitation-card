@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 
-const prisma = new PrismaClient();
 export const revalidate = 3600;
 
 export default async function PricingPage() {

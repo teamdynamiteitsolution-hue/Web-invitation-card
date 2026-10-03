@@ -15,7 +15,7 @@ interface EditorState {
   setSelectedAnimationId: (id: string | null) => void;
   
   eventData: {
-    category?: 'wedding' | 'birthday' | 'holud' | 'reception' | 'party' | 'custom';
+    category?: 'wedding' | 'birthday' | 'holud' | 'reception' | 'party' | 'corporate' | 'custom';
     personName?: string;
     turningAge?: string;
     brideName: string;

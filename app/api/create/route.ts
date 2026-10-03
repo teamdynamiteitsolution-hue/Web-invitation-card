@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 

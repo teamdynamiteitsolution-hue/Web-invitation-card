@@ -1,23 +1,56 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useEditor } from './EditorContext';
 import EnvelopeRoyal from '@/experiences/envelope-royal';
 import TheatricalCurtain from '@/experiences/theatrical-curtain';
 import MultiScratch from '@/experiences/multi-scratch';
 import DynamicCardExperience from '@/experiences/dynamic-card';
 import ScrollExperience from '@/experiences/scroll-experience/ScrollExperience';
+import { getTemplateById } from '@/lib/template-definitions';
+import { resolveCanonicalInvitation } from '@/lib/canonical-invitation';
+import { AudioPlayer } from '@/components/AudioPlayer';
+import { RotateCcw } from 'lucide-react';
 
 export const LivePreview = ({ dbData }: { dbData: any }) => {
   const { selectedTemplateId, selectedAnimationId, eventData, typographyStyles, layoutPresetId, activeTab } = useEditor();
+  const [replayKey, setReplayKey] = useState(0);
+  const [isReplaying, setIsReplaying] = useState(false);
 
-  const template = useMemo(() => {
-    return dbData?.templates?.find((t: any) => t.id === selectedTemplateId) || null;
-  }, [dbData, selectedTemplateId]);
+  // Trigger animation replay when animation changes or user switches to animation tab
+  useEffect(() => {
+    if (activeTab === 'animation') {
+      setIsReplaying(true);
+      setReplayKey(prev => prev + 1);
+    } else {
+      setIsReplaying(false);
+    }
+  }, [activeTab, selectedAnimationId]);
 
-  const animation = useMemo(() => {
-    return dbData?.animations?.find((a: any) => a.id === selectedAnimationId) || null;
-  }, [dbData, selectedAnimationId]);
+  const handleManualReplay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsReplaying(true);
+    setReplayKey(prev => prev + 1);
+  };
+
+  const canonical = useMemo(() => {
+    const rawTemplate = dbData?.templates?.find((t: any) => t.id === selectedTemplateId) || 
+                       getTemplateById(selectedTemplateId) ||
+                       dbData?.templates?.[0] || 
+                       null;
+    const rawAnimation = dbData?.animations?.find((a: any) => a.id === selectedAnimationId) || null;
+
+    return resolveCanonicalInvitation({
+      template: rawTemplate,
+      selectedTemplateId,
+      animation: rawAnimation,
+      eventData,
+      typographyStyles,
+      layoutPresetId
+    });
+  }, [dbData, selectedTemplateId, selectedAnimationId, eventData, typographyStyles, layoutPresetId]);
+
+  const { template, animation, isScroll, experienceType } = canonical;
 
   if (!template) {
     return (
@@ -27,40 +60,44 @@ export const LivePreview = ({ dbData }: { dbData: any }) => {
     );
   }
 
-  const expType = template.experienceType;
-  
   let ExperienceComponent: any = EnvelopeRoyal;
-  if (expType === 'curtain') ExperienceComponent = TheatricalCurtain;
-  if (expType === 'multi_scratch') ExperienceComponent = MultiScratch;
-  if (expType === 'dynamic_card') ExperienceComponent = DynamicCardExperience;
-  if (expType === 'SCROLL' || expType === 'scroll_story' || expType === 'scroll') {
+  if (experienceType === 'curtain') ExperienceComponent = TheatricalCurtain;
+  if (experienceType === 'multi_scratch') ExperienceComponent = MultiScratch;
+  if (experienceType === 'dynamic_card') ExperienceComponent = DynamicCardExperience;
+  if (isScroll || experienceType === 'scroll' || experienceType === 'scroll_story') {
     ExperienceComponent = ScrollExperience;
   }
 
-  const isScroll = expType === 'SCROLL' || expType === 'scroll_story' || expType === 'scroll';
-  const isImmersive = expType === 'IMMERSIVE' || expType === 'immersive';
-  
-  const containerClass = isScroll
-    ? "w-full h-full max-w-[420px] max-h-[850px] relative shadow-2xl rounded-[32px] overflow-y-auto overflow-x-hidden bg-[#FAF8F5] ring-8 ring-[#D4AF37]/20 transform transition-all mx-auto scroll-smooth"
-    : !isImmersive
-    ? "w-full h-full max-w-[420px] max-h-[850px] relative shadow-2xl rounded-[32px] overflow-hidden bg-[#FAF8F5] ring-8 ring-[#D4AF37]/20 transform transition-all mx-auto"
-    : "w-full h-full relative overflow-hidden bg-[#FAF8F5] transform transition-all";
+  const isImmersive = experienceType === 'immersive';
+  const shouldSkipAnimation = activeTab !== 'animation' && !isReplaying;
 
-  // Pass everything so the experience component can react to live data
+  const containerClass = isScroll
+    ? "w-full h-full md:max-w-[420px] md:max-h-[860px] relative shadow-none md:shadow-2xl rounded-none md:rounded-[32px] overflow-y-auto overflow-x-hidden bg-[#FAF8F5] ring-0 md:ring-8 md:ring-[#D4AF37]/20 transform transition-all mx-auto scroll-smooth group"
+    : !isImmersive
+    ? "w-full h-full md:max-w-[420px] md:max-h-[860px] relative shadow-none md:shadow-2xl rounded-none md:rounded-[32px] overflow-hidden bg-[#FAF8F5] ring-0 md:ring-8 md:ring-[#D4AF37]/20 transform transition-all mx-auto group"
+    : "w-full h-full relative overflow-hidden bg-[#FAF8F5] transform transition-all group";
+
   return (
     <div className={containerClass}>
-      {/* 
-        The ExperienceComponent is responsible for rendering the correct layout
-        (Card, Scroll, Immersive) based on its internal design.
-        We pass eventData directly which includes custom photos, texts, etc. 
-      */}
+      {/* Floating Replay Opening Button */}
+      <button
+        onClick={handleManualReplay}
+        className="absolute top-3 right-3 z-40 bg-black/60 hover:bg-black/85 backdrop-blur-md text-white/90 hover:text-white px-3 py-1.5 rounded-full text-[11px] font-medium flex items-center gap-1.5 transition-all shadow-lg border border-white/20 active:scale-95 cursor-pointer opacity-80 hover:opacity-100"
+        title="Replay Opening Animation"
+      >
+        <RotateCcw className="w-3 h-3" />
+        <span>Replay Opening</span>
+      </button>
+
       <ExperienceComponent 
+        key={`${selectedAnimationId}-${selectedTemplateId}-${replayKey}`}
         template={template} 
         animation={animation}
-        eventData={{ ...eventData, typographyStyles, layoutPresetId }} 
+        eventData={{ ...eventData, typographyStyles, layoutPresetId: canonical.layoutPresetId }} 
         revealMode="auto"
-        skipAnimation={activeTab !== 'animation'}
+        skipAnimation={shouldSkipAnimation}
       />
+      {canonical.music && <AudioPlayer music={canonical.music} />}
     </div>
   );
 };

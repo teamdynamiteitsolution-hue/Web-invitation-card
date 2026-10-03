@@ -1,11 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { Header } from "@/components/Header";
 import SuccessClient from "./SuccessClient";
-
-const prisma = new PrismaClient();
 
 export default async function SuccessPage({ params }: { params: { slug: string } }) {
   const cookieStore = cookies();
