@@ -30,7 +30,33 @@ export async function POST(req: Request) {
     const newPrice = parseFloat(price);
 
     if (type === 'template') {
-      await prisma.template.update({ where: { id }, data: { price: newPrice } });
+      const existing = await prisma.template.findFirst({
+        where: {
+          OR: [{ id }, { slug: id }]
+        }
+      });
+      if (existing) {
+        await prisma.template.update({ where: { id: existing.id }, data: { price: newPrice } });
+      } else {
+        const defaultCat = await prisma.eventCategory.findFirst();
+        await prisma.template.create({
+          data: {
+            slug: id,
+            name: id,
+            price: newPrice,
+            previewImageUrl: '/assets/Cards/card 1.png',
+            archetype: 'scroll_story',
+            experienceType: 'SCROLL',
+            categoryId: defaultCat?.id || '',
+            assetManifest: '{}',
+            visualIdentity: '{}',
+            openingConfig: '{}',
+            layoutConfig: '{}',
+            fieldsSchema: '{}',
+            styleConstraints: '{}',
+          }
+        });
+      }
     } else if (type === 'animation') {
       await prisma.animation.update({ where: { id }, data: { price: newPrice } });
     } else if (type === 'duration') {

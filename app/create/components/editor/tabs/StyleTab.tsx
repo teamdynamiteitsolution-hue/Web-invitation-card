@@ -3,11 +3,10 @@
 import React, { useState } from 'react';
 import { useEditor } from '../EditorContext';
 import { TYPOGRAPHY_PRESETS, getPresetStyle } from '@/lib/typography-presets';
-import { LAYOUT_PRESETS } from '@/lib/layout-presets';
 import { getTemplateById } from '@/lib/template-definitions';
 
 export const StyleTab = ({ dbData }: { dbData?: any }) => {
-  const { typographyStyles, updateTypographyStyle, layoutPresetId, setLayoutPresetId, selectedTemplateId, eventData } = useEditor();
+  const { typographyStyles, updateTypographyStyle, selectedTemplateId, eventData } = useEditor();
   const [targetNode, setTargetNode] = useState<string>('brideName');
 
   const currentTemplate = dbData?.templates?.find((t: any) => t.id === selectedTemplateId);
@@ -26,37 +25,15 @@ export const StyleTab = ({ dbData }: { dbData?: any }) => {
   return (
     <div className="space-y-6 pb-20">
       <div>
-        <h2 className="text-xl font-bold text-[#2C2623] mb-1" style={{ fontFamily: 'Cinzel, serif' }}>Layout &amp; Style</h2>
+        <h2 className="text-xl font-bold text-[#2C2623] mb-1" style={{ fontFamily: 'Cinzel, serif' }}>Typography &amp; Fonts</h2>
         <p className="text-sm text-[#7C7267]">
-          {isScroll ? "Customize typography and font styles for your scroll story." : "Choose text composition and typography for your card."}
+          Customize typography and font styles for your invitation names and headings.
         </p>
       </div>
 
-      {/* 
-        Text Composition:
-        Visible ONLY for Single Cards.
-        Invisible / hidden for Scroll Pages as requested.
-      */}
-      {!isScroll && (
-        <div className="space-y-4">
-          <h3 className="text-xs uppercase tracking-widest font-bold text-[#2C2623] border-b pb-1">Text Composition</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {LAYOUT_PRESETS.map(preset => (
-              <button
-                key={preset.id}
-                onClick={() => setLayoutPresetId(preset.id)}
-                className={`p-3 rounded-xl border-2 transition-all text-xs font-bold ${layoutPresetId === preset.id ? 'border-[#8C4A52] bg-[#F9F0EC] text-[#8C4A52]' : 'border-gray-100 hover:border-[#D4AF37]/50 bg-white text-[#7C7267]'}`}
-              >
-                {preset.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Typography Section (Available for both Card and Scroll) */}
-      <div className={`space-y-4 ${!isScroll ? 'pt-4 border-t' : ''}`}>
-        <h3 className="text-xs uppercase tracking-widest font-bold text-[#2C2623] border-b pb-1">Typography</h3>
+      <div className="space-y-4">
+        <h3 className="text-xs uppercase tracking-widest font-bold text-[#2C2623] border-b pb-1">Select Field to Style</h3>
 
         <div className="flex flex-wrap gap-2 mb-4">
           <button 

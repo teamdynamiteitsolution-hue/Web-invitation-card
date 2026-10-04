@@ -7,35 +7,42 @@ import { TEMPLATE_DEFINITIONS, getTemplateById } from '@/lib/template-definition
 
 export const DesignTab = ({ templates }: { templates: any[] }) => {
   const { selectedTemplateId, setSelectedTemplateId, setLayoutPresetId, updateEventData } = useEditor();
-  const [filter, setFilter] = useState<'scroll' | 'card' | 'all'>('scroll');
+  const [filter, setFilter] = useState<'card' | 'scroll' | 'all'>('card');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  // Merge database templates with TEMPLATE_DEFINITIONS to ensure all 6 scroll themes are available
+  // ONLY render templates directly from the database (zero fake/duplicate items)
   const allTemplates = React.useMemo(() => {
-    return TEMPLATE_DEFINITIONS.map(def => {
-      const match = (templates || []).find(t => t.slug === def.slug || t.id === def.id);
+    return (templates || []).map(t => {
+      let manifest: any = {};
+      try {
+        manifest = typeof t.assetManifest === 'string' ? JSON.parse(t.assetManifest) : (t.assetManifest || {});
+      } catch {}
+
+      const exp = (t.experienceType || '').toLowerCase();
+      const isScroll = exp === 'scroll' || exp === 'scroll_story';
+
       return {
-        ...def,
-        id: match?.id || def.id,
-        slug: def.slug,
-        name: def.name,
-        category: def.category || (match?.category?.slug || 'wedding'),
-        experienceType: def.experienceType,
-        previewImageUrl: def.previewImageUrl
+        id: t.id,
+        slug: t.slug || t.id,
+        name: t.name,
+        price: Number(t.price || 0),
+        category: t.category?.slug || t.category?.name?.toLowerCase() || 'wedding',
+        experienceType: isScroll ? 'SCROLL' : (t.experienceType || 'dynamic_card'),
+        compositionId: manifest.photoFrameStyle || t.archetype || 'classic_editorial',
+        previewImageUrl: t.previewImageUrl || '/assets/Cards/card 1.png',
       };
     });
   }, [templates]);
 
   const handleSelect = (tmpl: any) => {
     setSelectedTemplateId(tmpl.id);
-    const def = getTemplateById(tmpl.slug) || getTemplateById(tmpl.id);
-    if (def?.compositionId) {
-      setLayoutPresetId(def.compositionId);
+    if (tmpl.compositionId) {
+      setLayoutPresetId(tmpl.compositionId);
     }
     updateEventData({
       templateSlug: tmpl.slug,
       templateDefinitionId: tmpl.id,
-      layoutPresetId: def?.compositionId,
+      layoutPresetId: tmpl.compositionId,
       ...(tmpl.category && tmpl.category !== 'all' ? { category: tmpl.category as any } : {})
     });
   };
@@ -46,7 +53,7 @@ export const DesignTab = ({ templates }: { templates: any[] }) => {
   };
 
   const filteredTemplates = allTemplates.filter(tmpl => {
-    // 1. Format Filter (Interactive removed as instructed)
+    // 1. Format Filter
     const isScroll = isScrollType(tmpl.experienceType);
     if (filter === 'scroll' && !isScroll) return false;
     if (filter === 'card' && isScroll) return false;
@@ -84,11 +91,11 @@ export const DesignTab = ({ templates }: { templates: any[] }) => {
         <p className="text-sm text-[#7C7267]">Select format &amp; category for your invitation.</p>
       </div>
 
-      {/* Primary Format Filter Tabs: Scroll Page vs Single Card */}
+      {/* Primary Format Filter Tabs: Single Card vs Scroll Page */}
       <div className="flex gap-2 p-1.5 bg-stone-100 rounded-2xl select-none border border-[#D4AF37]/20">
         {[
-          { id: 'scroll', label: '📜 Scroll Page' },
           { id: 'card', label: '🎴 Single Card' },
+          { id: 'scroll', label: '📜 Scroll Page' },
           { id: 'all', label: 'All Formats' },
         ].map(f => (
           <button
@@ -302,6 +309,18 @@ export const DesignTab = ({ templates }: { templates: any[] }) => {
                 )}
               </div>
 
+              {/* Price Badge & Selection Indicator on Top Right */}
+              <div className="absolute top-2 right-2 z-20 flex items-center gap-1">
+                <span className="bg-white/95 backdrop-blur-xs text-[#8C4A52] font-extrabold text-[10px] sm:text-xs px-2 py-0.5 rounded-md border border-[#D4AF37]/40 shadow-xs">
+                  ৳{tmpl.price}
+                </span>
+                {isSelected && (
+                  <div className="bg-[#8C4A52] text-white rounded-full p-0.5 shadow-sm">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </div>
+                )}
+              </div>
+
               {/* Thumbnail Container */}
               <div className="aspect-[4/5] bg-gray-100 relative overflow-hidden">
                 {isScroll ? (
@@ -320,12 +339,6 @@ export const DesignTab = ({ templates }: { templates: any[] }) => {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-200">
                     <LayoutTemplate className="w-8 h-8 text-gray-400" />
-                  </div>
-                )}
-
-                {isSelected && (
-                  <div className="absolute top-2 right-2 z-20 bg-[#8C4A52] text-white rounded-full p-1 shadow-sm">
-                    <CheckCircle2 className="w-4 h-4" />
                   </div>
                 )}
               </div>

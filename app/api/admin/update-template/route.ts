@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     if (payload.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const body = await req.json();
-    const { id, name, categoryId, price, previewImageUrl, description, music } = body;
+    const { id, name, categoryId, price, previewImageUrl, description, music, revealMode, photoFrameStyle } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Missing template ID" }, { status: 400 });
@@ -31,6 +31,7 @@ export async function POST(req: Request) {
     if (price !== undefined) updateData.price = parseFloat(price) || 0;
     if (description !== undefined) updateData.description = description;
     if (previewImageUrl) updateData.previewImageUrl = previewImageUrl;
+    if (photoFrameStyle) updateData.archetype = photoFrameStyle;
 
     let currentManifest: any = {};
     try {
@@ -45,6 +46,16 @@ export async function POST(req: Request) {
 
     if (music !== undefined) {
       currentManifest.music = music; // null if removed, or object
+    }
+
+    if (revealMode) {
+      currentManifest.revealMode = revealMode;
+      updateData.supportedRevealModes = JSON.stringify([revealMode]);
+      updateData.openingConfig = JSON.stringify({ revealMode });
+    }
+
+    if (photoFrameStyle) {
+      currentManifest.photoFrameStyle = photoFrameStyle;
     }
 
     updateData.assetManifest = JSON.stringify(currentManifest);

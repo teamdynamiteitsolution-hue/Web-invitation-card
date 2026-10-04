@@ -30,7 +30,19 @@ export async function GET() {
       } 
     });
     const categories = await prisma.eventCategory.findMany({ select: { id: true, name: true, slug: true } });
-    const templates = await prisma.template.findMany({ select: { id: true, name: true, price: true, previewImageUrl: true, category: { select: { id: true, name: true, slug: true } } } });
+    const templates = await prisma.template.findMany({ 
+      select: { 
+        id: true, 
+        slug: true,
+        name: true, 
+        price: true, 
+        previewImageUrl: true, 
+        experienceType: true,
+        archetype: true,
+        assetManifest: true,
+        category: { select: { id: true, name: true, slug: true } } 
+      } 
+    });
     const animations = await prisma.animation.findMany({ select: { id: true, name: true, price: true, previewPosterUrl: true, videoUrl: true } });
     const durations = await prisma.durationTier.findMany({ select: { id: true, name: true, days: true, price: true } });
     const messages = await prisma.contactMessage.findMany({ orderBy: { createdAt: 'desc' } });

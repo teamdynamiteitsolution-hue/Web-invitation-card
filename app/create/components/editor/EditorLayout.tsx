@@ -160,20 +160,37 @@ export const EditorLayout = () => {
     }
   };
 
+  // Live pricing calculation for selected template and opening animation
+  const selectedTmpl =
+    dbData?.templates?.find((t: any) => t.id === selectedTemplateId || t.slug === selectedTemplateId) ||
+    getTemplateById(selectedTemplateId);
+  const templatePrice = Number(selectedTmpl?.price ?? (getTemplateById(selectedTemplateId) as any)?.price ?? 1000);
+
+  const selectedAnim = dbData?.animations?.find((a: any) => a.id === selectedAnimationId || a.slug === selectedAnimationId);
+  const animationPrice = Number(selectedAnim?.price ?? 0);
+
+  const liveTotalPrice = templatePrice + animationPrice;
+
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-[#FAF8F5]">
       {/* Header */}
-      <header className="h-16 md:h-20 bg-white border-b border-[#D4AF37]/20 flex items-center justify-between px-4 sm:px-8 flex-shrink-0 z-50">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <h1 className="font-bold text-[#8C4A52] text-xl sm:text-2xl" style={{ fontFamily: 'Noto Serif Bengali, serif' }}>উৎসব</h1>
+      <header className="h-16 md:h-20 bg-white border-b border-[#D4AF37]/20 flex items-center justify-between px-3 sm:px-8 flex-shrink-0 z-50">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <h1 className="font-bold text-[#8C4A52] text-lg sm:text-2xl" style={{ fontFamily: 'Noto Serif Bengali, serif' }}>উৎসব</h1>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <button onClick={() => router.push('/')} className="px-4 sm:px-5 py-2 rounded-full text-sm font-bold text-[#7C7267] hover:bg-gray-100 transition-colors disabled:opacity-50" disabled={isSaving}>
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Live Total Price Badge */}
+          <div className="flex items-center gap-1.5 px-3 py-1 sm:px-4 sm:py-1.5 bg-[#F9F0EC] border border-[#D4AF37]/40 rounded-full shadow-xs">
+            <span className="text-[10px] sm:text-xs font-bold text-[#7C7267] uppercase tracking-wider">Total:</span>
+            <span className="text-xs sm:text-sm font-extrabold text-[#8C4A52]">৳{liveTotalPrice}</span>
+          </div>
+
+          <button onClick={() => router.push('/')} className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-[#7C7267] hover:bg-gray-100 transition-colors disabled:opacity-50" disabled={isSaving}>
             Exit
           </button>
-          <button onClick={handleConfirmDesign} disabled={isSaving} className="px-5 sm:px-6 py-2 rounded-full text-sm font-bold bg-[#2C2623] text-white shadow-sm hover:bg-[#1a1614] transition-colors flex items-center gap-2">
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          <button onClick={handleConfirmDesign} disabled={isSaving} className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-[#2C2623] text-white shadow-sm hover:bg-[#1a1614] transition-colors flex items-center gap-1.5 sm:gap-2">
+            {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
             <span>Confirm</span>
           </button>
         </div>

@@ -16,13 +16,14 @@ export async function POST(req: Request) {
     if (payload.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const body = await req.json();
-    const { name, categoryId, price, previewImageUrl, experienceType, description } = body;
+    const { name, categoryId, price, previewImageUrl, experienceType, description, revealMode, photoFrameStyle } = body;
 
     if (!name || !categoryId || !previewImageUrl) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
+    const chosenRevealMode = revealMode || "sequential";
 
     const template = await prisma.template.create({
       data: {
@@ -32,14 +33,20 @@ export async function POST(req: Request) {
         categoryId,
         price: parseFloat(price) || 0,
         previewImageUrl,
-        archetype: "custom_editorial",
+        archetype: photoFrameStyle || "arch_portrait",
         experienceType: experienceType || "dynamic_card",
-        assetManifest: JSON.stringify({ cardAsset: previewImageUrl, decorations: [] }),
+        assetManifest: JSON.stringify({ 
+          cardAsset: previewImageUrl, 
+          decorations: [],
+          revealMode: chosenRevealMode,
+          photoFrameStyle: photoFrameStyle || "arch_portrait"
+        }),
         visualIdentity: JSON.stringify({ theme: "royal" }),
-        openingConfig: JSON.stringify({}),
-        layoutConfig: JSON.stringify({ nodes: [] }),
+        openingConfig: JSON.stringify({ revealMode: chosenRevealMode }),
+        layoutConfig: JSON.stringify({ nodes: [], layoutPresetId: photoFrameStyle || 'arch_portrait' }),
         fieldsSchema: JSON.stringify({}),
         styleConstraints: JSON.stringify({}),
+        supportedRevealModes: JSON.stringify([chosenRevealMode]),
       },
     });
 

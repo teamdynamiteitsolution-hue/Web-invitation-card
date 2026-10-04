@@ -1,10 +1,31 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Shield, Users, Tag, Loader2, Save, LayoutTemplate, PlayCircle, Clock, Edit3, CheckCircle2, LogOut, MessageSquare, ChevronDown, ChevronUp, Plus, Trash2, X, Music, Volume2, VolumeX } from "lucide-react";
+import { Shield, Users, Tag, Loader2, Save, LayoutTemplate, PlayCircle, Scroll, Clock, Edit3, CheckCircle2, LogOut, MessageSquare, ChevronDown, ChevronUp, Plus, Trash2, X, Music, Volume2, VolumeX, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { TEMPLATE_DEFINITIONS } from "@/lib/template-definitions";
 
-type Tab = "cards" | "animations" | "durations" | "users" | "messages";
+type Tab = "cards" | "animations" | "scroll_views" | "durations" | "users" | "messages";
+
+const REVEAL_MODE_LABELS: Record<string, { label: string; icon: string; desc: string }> = {
+  sequential: { label: "Sequential Reveal", icon: "✨", desc: "Elements float & fade in step by step" },
+  balloon_pop: { label: "Floating Balloons", icon: "🎈", desc: "Tap/pop floating balloons to reveal" },
+  parabola_arc: { label: "Parabolic Gesture", icon: "💫", desc: "Drag/scroll along parabolic field" },
+  ribbon_untie: { label: "Royal Ribbon", icon: "🎀", desc: "Untie golden royal bow to unveil card" },
+  floral_bloom: { label: "Botanical Blossom", icon: "🌸", desc: "Blooming petal scatter on entrance" },
+  scratch: { label: "Golden Stardust", icon: "🪄", desc: "Touch/scratch gold foil dust to reveal" },
+  parallax_3d: { label: "3D Parallax", icon: "🔮", desc: "Tilt & hover 3D multi-layered depth" },
+  fade: { label: "Smooth Fade", icon: "🌊", desc: "Gentle aesthetic opacity transition" },
+};
+
+const PHOTO_FRAME_LABELS: Record<string, { label: string; icon: string; desc: string }> = {
+  arch_portrait: { label: "Tall Arch", icon: "🏛️", desc: "Domed architectural arch" },
+  oval_horizontal: { label: "Oval Pill", icon: "🪞", desc: "Horizontal luxury oval pill" },
+  split_couple_portraits: { label: "Dual Arches", icon: "👥", desc: "Side-by-side couple arches" },
+  botanical_luxury: { label: "Botanical Crest", icon: "🌿", desc: "Greenery garland ring" },
+  cinematic_scene: { label: "Cinematic 16:9", icon: "🎬", desc: "Widescreen frame" },
+  classic_editorial: { label: "Regal Border", icon: "📜", desc: "Gold double border" },
+};
 
 export default function AdminDashboard() {
   const [data, setData] = useState<any>(null);
@@ -29,6 +50,8 @@ export default function AdminDashboard() {
     price: string;
     previewImageUrl: string;
     experienceType: string;
+    revealMode?: string;
+    photoFrameStyle?: string;
     music?: {
       url: string;
       name?: string;
@@ -149,6 +172,8 @@ export default function AdminDashboard() {
         price: cardModal.price,
         previewImageUrl: cardModal.previewImageUrl || '/assets/Cards/card 1.png',
         experienceType: cardModal.experienceType || 'dynamic_card',
+        revealMode: cardModal.revealMode || 'sequential',
+        photoFrameStyle: cardModal.photoFrameStyle || 'arch_portrait',
         music: cardModal.music ?? null,
       };
       if (cardModal.isEditing) {
@@ -211,9 +236,168 @@ export default function AdminDashboard() {
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#FAF8F5]"><Loader2 className="w-8 h-8 animate-spin text-[#8C4A52]" /></div>;
   if (error) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-red-500 bg-[#FAF8F5]"><Shield className="w-12 h-12" /><div>{error}</div><p className="text-sm text-gray-500">Please login as admin at /login</p></div>;
 
-  const currentCategoryCards = activeCategory === "all" 
+  // Single card templates (exclude scroll)
+  const currentCategoryCards = (activeCategory === "all" 
     ? data.templates 
-    : data.templates.filter((t: any) => t.category?.id === activeCategory);
+    : data.templates.filter((t: any) => t.category?.id === activeCategory)
+  ).filter((t: any) => (t.experienceType || '').toLowerCase() !== 'scroll' && (t.experienceType || '').toLowerCase() !== 'scroll_story');
+
+  // Scroll View templates merging TEMPLATE_DEFINITIONS with database prices
+  const scrollDefs = TEMPLATE_DEFINITIONS.filter(def => (def.experienceType || '').toLowerCase() === 'scroll' || (def.experienceType || '').toLowerCase() === 'scroll_story');
+  const scrollTemplates = scrollDefs.map(def => {
+    const match = (data.templates || []).find((t: any) => t.slug === def.slug || t.id === def.id);
+    return {
+      ...def,
+      id: match?.id || def.slug,
+      slug: def.slug,
+      name: match?.name || def.name,
+      price: match?.price !== undefined ? match.price : (def as any).price ?? 2000,
+      category: def.category || (match?.category?.slug || 'wedding'),
+      previewImageUrl: def.previewImageUrl
+    };
+  });
+
+  const renderScrollAdminThumbnail = (slug: string) => {
+    if (slug === 'haldi-scroll') {
+      return (
+        <div className="w-full h-full bg-gradient-to-b from-[#FEF08A] via-[#FACC15] to-[#CA8A04] text-[#713F12] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden">
+          <div className="text-xl">🌼</div>
+          <div>
+            <span className="text-[8px] uppercase tracking-widest font-bold block opacity-80">Gaye Holud</span>
+            <h5 className="font-bold text-xs leading-tight text-[#713F12]">Haldi Fiesta</h5>
+          </div>
+          <span className="text-[8px] bg-white/70 backdrop-blur-xs px-2 py-0.5 rounded-full font-bold uppercase self-center shadow-xs">
+            Festive Yellow
+          </span>
+        </div>
+      );
+    }
+    if (slug === 'birthday-scroll') {
+      return (
+        <div className="w-full h-full bg-gradient-to-b from-[#180B38] via-[#2E1065] to-[#0F0728] text-white flex flex-col justify-between p-3 select-none text-center relative overflow-hidden">
+          <div className="text-xl">🎂 ✨</div>
+          <div>
+            <span className="text-[8px] uppercase tracking-widest font-bold block text-amber-300">Birthday Glow</span>
+            <h5 className="font-bold text-xs leading-tight text-white">Milestone Party</h5>
+          </div>
+          <span className="text-[8px] bg-purple-500/40 border border-purple-400/60 px-2 py-0.5 rounded-full font-bold uppercase self-center shadow-xs text-amber-200">
+            Cosmic Starlight
+          </span>
+        </div>
+      );
+    }
+    if (slug === 'corporate-scroll') {
+      return (
+        <div className="w-full h-full bg-gradient-to-b from-[#0F172A] via-[#1E293B] to-[#0A0F1D] text-white flex flex-col justify-between p-3 select-none text-center relative overflow-hidden">
+          <div className="text-xl">🌐 🏢</div>
+          <div>
+            <span className="text-[8px] uppercase tracking-widest font-bold block text-sky-400">Corporate</span>
+            <h5 className="font-bold text-xs leading-tight text-white">Prestige Summit</h5>
+          </div>
+          <span className="text-[8px] bg-sky-500/20 border border-sky-400/50 px-2 py-0.5 rounded-full font-bold uppercase self-center text-sky-200">
+            Executive Navy
+          </span>
+        </div>
+      );
+    }
+    if (slug === 'velvet-scroll') {
+      return (
+        <div className="w-full h-full bg-gradient-to-b from-[#450A0A] via-[#5C0D11] to-[#2B050B] text-[#FAF6F0] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden">
+          <div className="text-xl text-[#D4AF37]">👑 ❦</div>
+          <div>
+            <span className="text-[8px] uppercase tracking-widest font-bold block text-[#D4AF37]">Reception</span>
+            <h5 className="font-bold text-xs leading-tight text-white">Ruby Velvet</h5>
+          </div>
+          <span className="text-[8px] bg-[#D4AF37]/20 border border-[#D4AF37]/60 px-2 py-0.5 rounded-full font-bold uppercase self-center text-[#D4AF37]">
+            Crimson & Gold
+          </span>
+        </div>
+      );
+    }
+    if (slug === 'botanical-scroll') {
+      return (
+        <div className="w-full h-full bg-gradient-to-b from-[#EBF3EE] via-[#F4F8F5] to-white text-[#1B3022] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden">
+          <div className="text-xl text-[#1F4E3B]">🌿 ❦</div>
+          <div>
+            <span className="text-[8px] uppercase tracking-widest font-bold block text-[#1F4E3B]">Garden Story</span>
+            <h5 className="font-bold text-xs leading-tight text-[#1B3022]">Emerald Sage</h5>
+          </div>
+          <span className="text-[8px] bg-[#1F4E3B]/10 border border-[#1F4E3B]/40 px-2 py-0.5 rounded-full font-bold uppercase self-center text-[#1F4E3B]">
+            Botanical Green
+          </span>
+        </div>
+      );
+    }
+    if (slug === 'floral-romance-scroll') {
+      return (
+        <div className="w-full h-full bg-gradient-to-b from-[#4A171E] via-[#6A2D31] to-[#2B080E] text-[#EDE7E1] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden border border-[#D4AF37]/30">
+          <div className="text-xl text-[#E6C6C3]">🌸 ❦</div>
+          <div>
+            <span className="text-[8px] uppercase tracking-widest font-bold block text-[#E6C6C3]">Floral Romance</span>
+            <h5 className="font-bold text-xs leading-tight text-white font-serif">Blossom Luxury</h5>
+          </div>
+          <span className="text-[8px] bg-[#E6C6C3]/20 border border-[#E6C6C3]/50 px-2 py-0.5 rounded-full font-bold uppercase self-center text-[#E6C6C3]">
+            Burgundy & Rose Gold
+          </span>
+        </div>
+      );
+    }
+    if (slug === 'editorial-botanical-scroll') {
+      return (
+        <div className="w-full h-full bg-gradient-to-b from-[#F5F0E8] via-[#ECE5D8] to-[#DDD5C5] text-[#28352B] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden border border-[#9BA58F]/40">
+          <div className="text-xl text-[#71806C]">🌿 ✦</div>
+          <div>
+            <span className="text-[8px] uppercase tracking-widest font-bold block text-[#71806C]">Minimal Arch</span>
+            <h5 className="font-bold text-xs leading-tight text-[#28352B] font-serif">Editorial Botanical</h5>
+          </div>
+          <span className="text-[8px] bg-[#71806C]/15 border border-[#71806C]/40 px-2 py-0.5 rounded-full font-bold uppercase self-center text-[#28352B]">
+            Olive & Cream
+          </span>
+        </div>
+      );
+    }
+    if (slug === 'cinematic-story-scroll') {
+      return (
+        <div className="w-full h-full bg-gradient-to-b from-[#11100E] via-[#1E1C18] to-[#0A0908] text-[#EEE8DC] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden border border-[#C5B69A]/30">
+          <div className="text-xl text-[#C5B69A]">🎬 ✦</div>
+          <div>
+            <span className="text-[8px] uppercase tracking-widest font-bold block text-[#C5B69A]">Cinematic Story</span>
+            <h5 className="font-bold text-xs leading-tight text-white font-serif">Chapter & Drama</h5>
+          </div>
+          <span className="text-[8px] bg-[#C5B69A]/20 border border-[#C5B69A]/50 px-2 py-0.5 rounded-full font-bold uppercase self-center text-[#C5B69A]">
+            Midnight & Gold
+          </span>
+        </div>
+      );
+    }
+    if (slug === 'botanical-magazine-scroll') {
+      return (
+        <div className="w-full h-full bg-gradient-to-b from-[#F8F4EC] via-[#EAE3D2] to-[#D7CCA8] text-[#24382B] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden border border-[#B9C9A9]/50">
+          <div className="text-xl text-[#A37C4A]">📰 ❦</div>
+          <div>
+            <span className="text-[8px] uppercase tracking-widest font-bold block text-[#73816F]">Magazine Spread</span>
+            <h5 className="font-bold text-xs leading-tight text-[#24382B] font-serif">Botanical Magazine</h5>
+          </div>
+          <span className="text-[8px] bg-[#A37C4A]/15 border border-[#A37C4A]/40 px-2 py-0.5 rounded-full font-bold uppercase self-center text-[#73816F]">
+            Earth Tone Spread
+          </span>
+        </div>
+      );
+    }
+    // Default Royal Heritage
+    return (
+      <div className="w-full h-full bg-gradient-to-b from-[#2C241E] via-[#3D322A] to-[#1F1915] text-[#FAF6F0] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden">
+        <div className="text-xl text-[#D4AF37]">❖ ⚜</div>
+        <div>
+          <span className="text-[8px] uppercase tracking-widest font-bold block text-[#D4AF37]">Palace Edition</span>
+          <h5 className="font-bold text-xs leading-tight text-white">Royal Heritage</h5>
+        </div>
+        <span className="text-[8px] bg-[#D4AF37]/20 border border-[#D4AF37]/60 px-2 py-0.5 rounded-full font-bold uppercase self-center text-[#D4AF37]">
+          Gold & Ivory
+        </span>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col md:flex-row text-[#2C2623] font-sans">
@@ -233,6 +417,9 @@ export default function AdminDashboard() {
           </button>
           <button onClick={() => setActiveTab("animations")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === "animations" ? "bg-[#8C4A52] text-white shadow-elevated-card" : "text-[#7C7267] hover:bg-[#F9F0EC]"}`}>
             <PlayCircle className="w-5 h-5" /> Animations
+          </button>
+          <button onClick={() => setActiveTab("scroll_views")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === "scroll_views" ? "bg-[#8C4A52] text-white shadow-elevated-card" : "text-[#7C7267] hover:bg-[#F9F0EC]"}`}>
+            <Scroll className="w-5 h-5" /> Scroll View
           </button>
           <button onClick={() => setActiveTab("durations")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === "durations" ? "bg-[#8C4A52] text-white shadow-elevated-card" : "text-[#7C7267] hover:bg-[#F9F0EC]"}`}>
             <Clock className="w-5 h-5" /> Durations
@@ -264,14 +451,14 @@ export default function AdminDashboard() {
         {/* Header */}
         <header className="h-20 bg-white/50 backdrop-blur-md border-b border-[#D4AF37]/20 flex items-center px-8 flex-shrink-0">
           <h2 className="text-2xl font-bold capitalize" style={{ fontFamily: 'Cinzel, serif' }}>
-            {activeTab} Management
+            {activeTab === "scroll_views" ? "Scroll View Pricing" : `${activeTab} Management`}
           </h2>
         </header>
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-8">
           
-          {/* Cards (Templates) Tab */}
+          {/* Cards (Single Card Templates) Tab */}
           {activeTab === "cards" && (
             <div className="space-y-8">
               {/* Category Tabs & Add Card Button */}
@@ -302,7 +489,9 @@ export default function AdminDashboard() {
                     categoryId: data.categories[0]?.id || "",
                     price: "1000",
                     previewImageUrl: "",
-                    experienceType: "dynamic_card"
+                    experienceType: "dynamic_card",
+                    revealMode: "sequential",
+                    photoFrameStyle: "arch_portrait"
                   })}
                   className="px-5 py-2.5 rounded-full bg-[#8C4A52] text-white font-bold text-sm shadow-soft-surface hover:bg-[#7a3e45] transition-all flex items-center gap-2"
                 >
@@ -312,83 +501,114 @@ export default function AdminDashboard() {
 
               {/* Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {currentCategoryCards.map((t: any) => (
-                  <div key={t.id} className="bg-white rounded-2xl border border-[#D4AF37]/20 p-5 shadow-soft-surface flex flex-col group relative overflow-hidden">
-                    <div className="relative w-full aspect-[4/5] bg-gray-100 rounded-xl overflow-hidden mb-4 border border-gray-100">
-                      <img src={t.previewImageUrl} alt={t.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-[#2C2623] font-bold px-2 py-1 rounded text-xs border border-white/50 shadow-sm">
-                        ৳{t.price}
+                {currentCategoryCards.map((t: any) => {
+                  let mode = "sequential";
+                  let frame = t.archetype || "arch_portrait";
+                  try {
+                    const parsed = JSON.parse(t.assetManifest || "{}");
+                    if (parsed?.revealMode) mode = parsed.revealMode;
+                    if (parsed?.photoFrameStyle) frame = parsed.photoFrameStyle;
+                  } catch {}
+                  const modeInfo = REVEAL_MODE_LABELS[mode] || { label: mode, icon: "✨" };
+                  const frameInfo = PHOTO_FRAME_LABELS[frame] || { label: frame, icon: "🏛️" };
+
+                  return (
+                    <div key={t.id} className="bg-white rounded-2xl border border-[#D4AF37]/20 p-5 shadow-soft-surface flex flex-col group relative overflow-hidden">
+                      <div className="relative w-full aspect-[4/5] bg-gray-100 rounded-xl overflow-hidden mb-4 border border-gray-100">
+                        <img src={t.previewImageUrl} alt={t.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-[#2C2623] font-bold px-2 py-1 rounded text-xs border border-white/50 shadow-sm">
+                          ৳{t.price}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h4 className="font-bold text-lg leading-tight mb-1">{t.name}</h4>
-                        <span className="text-xs font-bold text-[#8C4A52] uppercase">{t.category?.name}</span>
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-bold text-lg leading-tight mb-1">{t.name}</h4>
+                          <span className="text-xs font-bold text-[#8C4A52] uppercase">{t.category?.name}</span>
+                        </div>
                       </div>
-                    </div>
-                    
-                    {editingPrice === t.id ? (
-                      <div className="mt-auto flex gap-2">
-                        <input 
-                          type="number" 
-                          value={editValue} 
-                          onChange={(e) => setEditValue(e.target.value)} 
-                          className="w-full px-3 py-2 border border-[#D4AF37]/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm font-bold"
-                          autoFocus
-                        />
-                        <button 
-                          onClick={() => handlePriceUpdate('template', t.id)}
-                          className="flex-1 px-4 py-2 rounded-xl bg-[#8C4A52] text-white font-bold hover:bg-[#7a3e45] transition-colors text-sm shadow-sm"
-                        >
-                          Save
-                        </button>
-                        <button 
-                          onClick={() => setEditingPrice(null)}
-                          className="px-3 py-2 rounded-xl bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors text-sm shadow-sm"
-                        >
-                          X
-                        </button>
+
+                      {/* View Type & Frame Badges */}
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        <span className="text-[10px] font-bold text-[#8C4A52] bg-[#F9F0EC] border border-[#D4AF37]/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span>{modeInfo.icon}</span> {modeInfo.label}
+                        </span>
+                        <span className="text-[10px] font-bold text-[#2C2623] bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span>{frameInfo.icon}</span> {frameInfo.label}
+                        </span>
                       </div>
-                    ) : (
-                      <div className="mt-auto flex flex-col gap-2">
-                        <div className="flex gap-2">
+                      
+                      {editingPrice === t.id ? (
+                        <div className="mt-auto flex gap-2">
+                          <input 
+                            type="number" 
+                            value={editValue} 
+                            onChange={(e) => setEditValue(e.target.value)} 
+                            className="w-full px-3 py-2 border border-[#D4AF37]/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm font-bold"
+                            autoFocus
+                          />
                           <button 
-                            onClick={() => {
-                              let music = null;
-                              try { music = JSON.parse(t.assetManifest || "{}")?.music; } catch {}
-                              setCardModal({
-                                isOpen: true,
-                                isEditing: true,
-                                id: t.id,
-                                name: t.name,
-                                categoryId: t.category?.id || data.categories[0]?.id || "",
-                                price: t.price.toString(),
-                                previewImageUrl: t.previewImageUrl,
-                                experienceType: t.experienceType || "dynamic_card",
-                                music: music || null
-                              });
-                            }}
-                            className="flex-1 py-2 rounded-xl bg-[#8C4A52] text-white font-bold flex items-center justify-center gap-1.5 hover:bg-[#7a3e45] transition-colors text-xs shadow-sm"
+                            onClick={() => handlePriceUpdate('template', t.id)}
+                            className="flex-1 px-4 py-2 rounded-xl bg-[#8C4A52] text-white font-bold hover:bg-[#7a3e45] transition-colors text-sm shadow-sm"
                           >
-                            <Edit3 className="w-3.5 h-3.5" /> Edit Card
+                            Save
                           </button>
                           <button 
-                            onClick={() => setDeleteModal({ isOpen: true, id: t.id, type: 'template' })}
-                            className="px-3 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-colors shadow-sm"
+                            onClick={() => setEditingPrice(null)}
+                            className="px-3 py-2 rounded-xl bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors text-sm shadow-sm"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            X
                           </button>
                         </div>
-                        <button 
-                          onClick={() => startEditing(t.id, t.price)}
-                          className="w-full py-1.5 rounded-lg border border-gray-200 text-gray-600 font-bold text-[11px] hover:bg-gray-50 transition-colors"
-                        >
-                          Quick Price: ৳{t.price}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      ) : (
+                        <div className="mt-auto flex flex-col gap-2">
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => {
+                                let music = null;
+                                let revealMode = "sequential";
+                                let photoFrameStyle = t.archetype || "arch_portrait";
+                                try {
+                                  const parsed = JSON.parse(t.assetManifest || "{}");
+                                  music = parsed?.music;
+                                  if (parsed?.revealMode) revealMode = parsed.revealMode;
+                                  if (parsed?.photoFrameStyle) photoFrameStyle = parsed.photoFrameStyle;
+                                } catch {}
+                                setCardModal({
+                                  isOpen: true,
+                                  isEditing: true,
+                                  id: t.id,
+                                  name: t.name,
+                                  categoryId: t.category?.id || data.categories[0]?.id || "",
+                                  price: t.price.toString(),
+                                  previewImageUrl: t.previewImageUrl,
+                                  experienceType: t.experienceType || "dynamic_card",
+                                  revealMode,
+                                  photoFrameStyle,
+                                  music: music || null
+                                });
+                              }}
+                              className="flex-1 py-2 rounded-xl bg-[#8C4A52] text-white font-bold flex items-center justify-center gap-1.5 hover:bg-[#7a3e45] transition-colors text-xs shadow-sm"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" /> Edit Card
+                            </button>
+                            <button 
+                              onClick={() => setDeleteModal({ isOpen: true, id: t.id, type: 'template' })}
+                              className="px-3 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-colors shadow-sm"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <button 
+                            onClick={() => startEditing(t.id, t.price)}
+                            className="w-full py-1.5 rounded-lg border border-gray-200 text-gray-600 font-bold text-[11px] hover:bg-gray-50 transition-colors"
+                          >
+                            Quick Price: ৳{t.price}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
                 {currentCategoryCards.length === 0 && (
                   <div className="col-span-full py-12 text-center text-[#7C7267] italic font-serif bg-white rounded-2xl border border-dashed border-[#D4AF37]/50">
                     No cards found in this category.
@@ -483,6 +703,84 @@ export default function AdminDashboard() {
                           className="w-full py-1.5 rounded-lg border border-gray-200 text-gray-600 font-bold text-[11px] hover:bg-gray-50 transition-colors"
                         >
                           Quick Price: ৳{a.price}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Scroll View Tab (Price Management) */}
+          {activeTab === "scroll_views" && (
+            <div className="space-y-6">
+              <div className="p-4 bg-white rounded-2xl border border-[#D4AF37]/30 shadow-xs flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-base text-[#2C2623] flex items-center gap-2">
+                    <Scroll className="w-5 h-5 text-[#8C4A52]" /> Scroll View Templates ({scrollTemplates.length})
+                  </h3>
+                  <p className="text-xs text-[#7C7267] mt-0.5">
+                    Set the individual prices for each vertical scrolling invitation story.
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-[#8C4A52] bg-[#F9F0EC] px-3 py-1.5 rounded-full border border-[#D4AF37]/30">
+                  Fixed Architecture (Prices Editable)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {scrollTemplates.map((t: any) => (
+                  <div key={t.id} className="bg-white rounded-2xl border border-[#D4AF37]/20 p-5 shadow-soft-surface flex flex-col group relative overflow-hidden">
+                    <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden mb-4 border border-stone-200">
+                      {renderScrollAdminThumbnail(t.slug)}
+                      <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm text-[#8C4A52] font-bold px-2.5 py-1 rounded-md text-xs border border-[#D4AF37]/40 shadow-xs">
+                        ৳{t.price}
+                      </div>
+                      <div className="absolute top-2 left-2 bg-[#8C4A52] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                        <Scroll className="w-2.5 h-2.5" /> Scroll
+                      </div>
+                    </div>
+
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h4 className="font-bold text-base leading-tight mb-1">{t.name}</h4>
+                        <span className="text-[10px] font-bold text-[#8C4A52] uppercase bg-[#F9F0EC] px-2 py-0.5 rounded-md border border-[#D4AF37]/20 inline-block">
+                          {t.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    {editingPrice === t.id ? (
+                      <div className="mt-auto flex gap-2">
+                        <input 
+                          type="number" 
+                          value={editValue} 
+                          onChange={(e) => setEditValue(e.target.value)} 
+                          className="w-full px-3 py-2 border border-[#D4AF37]/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm font-bold"
+                          autoFocus
+                          placeholder="Price in ৳"
+                        />
+                        <button 
+                          onClick={() => handlePriceUpdate('template', t.id)}
+                          className="px-4 py-2 rounded-xl bg-[#8C4A52] text-white font-bold hover:bg-[#7a3e45] transition-colors text-sm shadow-sm"
+                        >
+                          Save
+                        </button>
+                        <button 
+                          onClick={() => setEditingPrice(null)}
+                          className="px-3 py-2 rounded-xl bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors text-sm shadow-sm"
+                        >
+                          X
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-auto flex flex-col gap-2">
+                        <button 
+                          onClick={() => startEditing(t.id, t.price)}
+                          className="w-full py-2.5 rounded-xl bg-[#2C2623] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#1a1614] transition-colors text-xs shadow-sm"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-[#D4AF37]" /> Set Price: ৳{t.price}
                         </button>
                       </div>
                     )}
@@ -756,6 +1054,54 @@ export default function AdminDashboard() {
                       />
                     </label>
                   </div>
+                </div>
+
+                {/* Animation View Type Selection */}
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2623] uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#8C4A52]" />
+                    <span>Interactive Animation View Type</span>
+                  </label>
+                  <select
+                    value={cardModal.revealMode || "sequential"}
+                    onChange={(e) => setCardModal(prev => prev ? { ...prev, revealMode: e.target.value } : null)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-xs font-bold bg-white text-[#2C2623]"
+                  >
+                    <option value="sequential">✨ Sequential Floating Reveal (Elements float & fade in step by step)</option>
+                    <option value="balloon_pop">🎈 Interactive Sky Balloons (Tap/pop balloons to reveal - Birthday/Festive)</option>
+                    <option value="parabola_arc">💫 Parabolic Gesture Curve (Drag/scroll along parabolic curve)</option>
+                    <option value="ribbon_untie">🎀 Royal Satin Ribbon (Untie golden royal bow to unveil card)</option>
+                    <option value="floral_bloom">🌸 Botanical Blossom (Blooming petal scatter on entrance)</option>
+                    <option value="scratch">🪄 Golden Stardust Wipe (Touch/scratch gold foil dust to reveal)</option>
+                    <option value="parallax_3d">🔮 3D Gyro Parallax (Interactive tilt & motion depth)</option>
+                    <option value="fade">🌊 Ambient Smooth Fade (Gentle aesthetic opacity transition)</option>
+                  </select>
+                  <p className="text-[11px] text-[#7C7267] mt-1">
+                    Guests experience this animation when opening and revealing the card.
+                  </p>
+                </div>
+
+                {/* Photo Frame Shape & Style Selection */}
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2623] uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                    <LayoutTemplate className="w-3.5 h-3.5 text-[#8C4A52]" />
+                    <span>Photo Frame Shape & Layout Style</span>
+                  </label>
+                  <select
+                    value={cardModal.photoFrameStyle || "arch_portrait"}
+                    onChange={(e) => setCardModal(prev => prev ? { ...prev, photoFrameStyle: e.target.value } : null)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-xs font-bold bg-white text-[#2C2623]"
+                  >
+                    <option value="arch_portrait">🏛️ Tall Architectural Arch (Classic royal domed frame)</option>
+                    <option value="oval_horizontal">🪞 Luxury Oval / Pill Capsule (Horizontal wide curved frame)</option>
+                    <option value="split_couple_portraits">👥 Dual Arches (Groom & Bride side-by-side portraits)</option>
+                    <option value="botanical_luxury">🌿 Botanical Crest & Laurel (Greenery garland ring)</option>
+                    <option value="cinematic_scene">🎬 Cinematic Widescreen (16:9 modern dramatic frame)</option>
+                    <option value="classic_editorial">📜 Classic Regal Border (Gold lined double border)</option>
+                  </select>
+                  <p className="text-[11px] text-[#7C7267] mt-1">
+                    Shapes the couple/host image on the card (e.g. horizontal oval pill, side-by-side arches, tall dome).
+                  </p>
                 </div>
 
                 {/* Background Music Management Sector */}
