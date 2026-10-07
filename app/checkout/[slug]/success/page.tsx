@@ -22,7 +22,14 @@ export default async function SuccessPage({ params }: { params: { slug: string }
 
   const invitation = await prisma.invitation.findUnique({
     where: { slug: params.slug },
-    include: { template: true }
+    include: {
+      template: true,
+      payments: {
+        include: { transactions: true },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
   });
 
   if (!invitation) return notFound();

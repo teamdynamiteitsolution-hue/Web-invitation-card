@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Shield, Users, Tag, Loader2, Save, LayoutTemplate, PlayCircle, Scroll, Clock, Edit3, CheckCircle2, LogOut, MessageSquare, ChevronDown, ChevronUp, Plus, Trash2, X, Music, Volume2, VolumeX, Sparkles } from "lucide-react";
+import { Shield, Users, Tag, Loader2, Save, LayoutTemplate, PlayCircle, Scroll, Clock, Edit3, CheckCircle2, LogOut, MessageSquare, ChevronDown, ChevronUp, Plus, Trash2, X, Music, Volume2, VolumeX, Sparkles, CreditCard, Smartphone, Check, AlertCircle, ExternalLink, RefreshCw, Copy } from "lucide-react";
 import Link from "next/link";
 import { TEMPLATE_DEFINITIONS } from "@/lib/template-definitions";
 
-type Tab = "cards" | "animations" | "scroll_views" | "durations" | "users" | "messages";
+type Tab = "cards" | "animations" | "scroll_views" | "durations" | "users" | "messages" | "payments";
 
 const REVEAL_MODE_LABELS: Record<string, { label: string; icon: string; desc: string }> = {
   sequential: { label: "Sequential Reveal", icon: "✨", desc: "Elements float & fade in step by step" },
@@ -31,7 +31,7 @@ export default function AdminDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   const [activeTab, setActiveTab] = useState<Tab>("cards");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
@@ -39,6 +39,34 @@ export default function AdminDashboard() {
   const [editingPrice, setEditingPrice] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; type: string } | null>(null);
+
+  // Payments State
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [paymentTransactions, setPaymentTransactions] = useState<any[]>([]);
+  const [loadingPayments, setLoadingPayments] = useState(false);
+  const [savingMethodId, setSavingMethodId] = useState<string | null>(null);
+  const [actionTxnId, setActionTxnId] = useState<string | null>(null);
+  const [copiedTrxId, setCopiedTrxId] = useState<string | null>(null);
+  const [adminActiveSubTab, setAdminActiveSubTab] = useState<Record<string, "MERCHANT" | "PERSONAL" | "AGENT">>({});
+
+  // In-app Payment Action Modal & Toast
+  const [paymentActionModal, setPaymentActionModal] = useState<{
+    isOpen: boolean;
+    transactionId: string;
+    action: "APPROVE" | "REJECT";
+    orderNumber?: string;
+    customerName?: string;
+    amount?: number;
+  } | null>(null);
+  const [toastNotification, setToastNotification] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  const showToast = (type: "success" | "error", message: string) => {
+    setToastNotification({ type, message });
+    setTimeout(() => setToastNotification(null), 3500);
+  };
 
   // Add / Edit Card Modal State
   const [cardModal, setCardModal] = useState<{
@@ -92,6 +120,115 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const fetchPaymentsData = async () => {
+    setLoadingPayments(true);
+    try {
+      const [mRes, tRes] = await Promise.all([
+        fetch("/api/payments/methods"),
+        fetch("/api/admin/payments")
+      ]);
+      if (mRes.ok) {
+        const mData = await mRes.json();
+        if (mData.methods) setPaymentMethods(mData.methods);
+      }
+      if (tRes.ok) {
+        const tData = await tRes.json();
+        if (tData.transactions) setPaymentTransactions(tData.transactions);
+      }
+    } catch (err) {
+      console.error("Failed to load payments data:", err);
+    } finally {
+      setLoadingPayments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "payments") {
+      fetchPaymentsData();
+    }
+  }, [activeTab]);
+
+  const handleUpdatePaymentMethodField = (methodId: string, field: string, value: any) => {
+    setPaymentMethods((prev) =>
+      prev.map((m) => {
+        if (m.methodId !== methodId) return m;
+        const updated = { ...m, [field]: value };
+        const activeType = updated.accountType || "MERCHANT";
+        if (activeType === "MERCHANT") {
+          if (field === "merchantNumber") updated.number = value;
+          if (field === "merchantCounter") updated.counter = value;
+          if (field === "merchantInstructions") updated.instructions = value;
+        } else if (activeType === "PERSONAL") {
+          if (field === "personalNumber") updated.number = value;
+          if (field === "personalInstructions") updated.instructions = value;
+        } else if (activeType === "AGENT") {
+          if (field === "agentNumber") updated.number = value;
+          if (field === "agentInstructions") updated.instructions = value;
+        }
+        return updated;
+      })
+    );
+  };
+
+  const handleSavePaymentMethod = async (method: any) => {
+    setSavingMethodId(method.methodId);
+    try {
+      const res = await fetch("/api/payments/methods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(method),
+      });
+      if (res.ok) {
+        showToast("success", `${method.name} settings saved successfully!`);
+        fetchPaymentsData();
+      } else {
+        const err = await res.json();
+        showToast("error", err.error || "Failed to save settings.");
+      }
+    } catch (e) {
+      showToast("error", "Server error occurred.");
+    } finally {
+      setSavingMethodId(null);
+    }
+  };
+
+  const handleTransactionAction = (transaction: any, action: "APPROVE" | "REJECT") => {
+    setPaymentActionModal({
+      isOpen: true,
+      transactionId: transaction.id,
+      action,
+      orderNumber: transaction.paymentOrder?.orderNumber,
+      customerName: transaction.paymentOrder?.user?.name,
+      amount: transaction.paymentOrder?.amount,
+    });
+  };
+
+  const executeTransactionAction = async () => {
+    if (!paymentActionModal) return;
+    const { transactionId, action } = paymentActionModal;
+    setActionTxnId(transactionId);
+    try {
+      const res = await fetch("/api/admin/payments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionId, action }),
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        showToast("success", `Transaction successfully ${action === "APPROVE" ? "approved" : "rejected"}!`);
+        setPaymentActionModal(null);
+        fetchPaymentsData();
+        fetchData();
+      } else {
+        showToast("error", result.error || "Action could not be completed.");
+      }
+    } catch (err) {
+      showToast("error", "Server error occurred.");
+    } finally {
+      setActionTxnId(null);
+    }
+  };
 
   const confirmDelete = async () => {
     if (!deleteModal) return;
@@ -237,8 +374,8 @@ export default function AdminDashboard() {
   if (error) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-red-500 bg-[#FAF8F5]"><Shield className="w-12 h-12" /><div>{error}</div><p className="text-sm text-gray-500">Please login as admin at /login</p></div>;
 
   // Single card templates (exclude scroll)
-  const currentCategoryCards = (activeCategory === "all" 
-    ? data.templates 
+  const currentCategoryCards = (activeCategory === "all"
+    ? data.templates
     : data.templates.filter((t: any) => t.category?.id === activeCategory)
   ).filter((t: any) => (t.experienceType || '').toLowerCase() !== 'scroll' && (t.experienceType || '').toLowerCase() !== 'scroll_story');
 
@@ -401,7 +538,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col md:flex-row text-[#2C2623] font-sans">
-      
+
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-white border-r border-[#D4AF37]/20 flex flex-col flex-shrink-0 relative z-10 shadow-soft-surface">
         <div className="p-6 border-b border-[#D4AF37]/20 flex flex-col gap-2">
@@ -430,14 +567,17 @@ export default function AdminDashboard() {
           <button onClick={() => setActiveTab("messages")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === "messages" ? "bg-[#8C4A52] text-white shadow-elevated-card" : "text-[#7C7267] hover:bg-[#F9F0EC]"}`}>
             <MessageSquare className="w-5 h-5" /> Messages
           </button>
+          <button onClick={() => setActiveTab("payments")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === "payments" ? "bg-[#8C4A52] text-white shadow-elevated-card" : "text-[#7C7267] hover:bg-[#F9F0EC]"}`}>
+            <CreditCard className="w-5 h-5" /> Payments
+          </button>
         </nav>
-        
+
         <div className="p-4 border-t border-[#D4AF37]/20 mt-auto">
-          <button 
+          <button
             onClick={async () => {
               await fetch("/api/auth/logout", { method: "POST" });
               window.location.href = "/";
-            }} 
+            }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-[#7C7267] hover:bg-red-50 hover:text-red-500 transition-colors"
           >
             <LogOut className="w-5 h-5" /> Logout
@@ -447,32 +587,36 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#FAF8F5]">
-        
+
         {/* Header */}
         <header className="h-20 bg-white/50 backdrop-blur-md border-b border-[#D4AF37]/20 flex items-center px-8 flex-shrink-0">
           <h2 className="text-2xl font-bold capitalize" style={{ fontFamily: 'Cinzel, serif' }}>
-            {activeTab === "scroll_views" ? "Scroll View Pricing" : `${activeTab} Management`}
+            {activeTab === "scroll_views"
+              ? "Scroll View Pricing"
+              : activeTab === "payments"
+                ? "MFS Payments & Gateways"
+                : `${activeTab} Management`}
           </h2>
         </header>
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-8">
-          
+
           {/* Cards (Single Card Templates) Tab */}
           {activeTab === "cards" && (
             <div className="space-y-8">
               {/* Category Tabs & Add Card Button */}
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex flex-wrap gap-2">
-                  <button 
+                  <button
                     onClick={() => setActiveCategory("all")}
                     className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${activeCategory === "all" ? 'bg-[#2C2623] text-white shadow-elevated-card' : 'bg-white border border-[#D4AF37]/30 text-[#7C7267] hover:bg-[#F9F0EC]'}`}
                   >
                     All Cards
                   </button>
                   {data.categories.map((cat: any) => (
-                    <button 
-                      key={cat.id} 
+                    <button
+                      key={cat.id}
                       onClick={() => setActiveCategory(cat.id)}
                       className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${activeCategory === cat.id ? 'bg-[#2C2623] text-white shadow-elevated-card' : 'bg-white border border-[#D4AF37]/30 text-[#7C7267] hover:bg-[#F9F0EC]'}`}
                     >
@@ -481,7 +625,7 @@ export default function AdminDashboard() {
                   ))}
                 </div>
 
-                <button 
+                <button
                   onClick={() => setCardModal({
                     isOpen: true,
                     isEditing: false,
@@ -508,7 +652,7 @@ export default function AdminDashboard() {
                     const parsed = JSON.parse(t.assetManifest || "{}");
                     if (parsed?.revealMode) mode = parsed.revealMode;
                     if (parsed?.photoFrameStyle) frame = parsed.photoFrameStyle;
-                  } catch {}
+                  } catch { }
                   const modeInfo = REVEAL_MODE_LABELS[mode] || { label: mode, icon: "✨" };
                   const frameInfo = PHOTO_FRAME_LABELS[frame] || { label: frame, icon: "🏛️" };
 
@@ -536,23 +680,23 @@ export default function AdminDashboard() {
                           <span>{frameInfo.icon}</span> {frameInfo.label}
                         </span>
                       </div>
-                      
+
                       {editingPrice === t.id ? (
                         <div className="mt-auto flex gap-2">
-                          <input 
-                            type="number" 
-                            value={editValue} 
-                            onChange={(e) => setEditValue(e.target.value)} 
+                          <input
+                            type="number"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
                             className="w-full px-3 py-2 border border-[#D4AF37]/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm font-bold"
                             autoFocus
                           />
-                          <button 
+                          <button
                             onClick={() => handlePriceUpdate('template', t.id)}
                             className="flex-1 px-4 py-2 rounded-xl bg-[#8C4A52] text-white font-bold hover:bg-[#7a3e45] transition-colors text-sm shadow-sm"
                           >
                             Save
                           </button>
-                          <button 
+                          <button
                             onClick={() => setEditingPrice(null)}
                             className="px-3 py-2 rounded-xl bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors text-sm shadow-sm"
                           >
@@ -562,7 +706,7 @@ export default function AdminDashboard() {
                       ) : (
                         <div className="mt-auto flex flex-col gap-2">
                           <div className="flex gap-2">
-                            <button 
+                            <button
                               onClick={() => {
                                 let music = null;
                                 let revealMode = "sequential";
@@ -572,7 +716,7 @@ export default function AdminDashboard() {
                                   music = parsed?.music;
                                   if (parsed?.revealMode) revealMode = parsed.revealMode;
                                   if (parsed?.photoFrameStyle) photoFrameStyle = parsed.photoFrameStyle;
-                                } catch {}
+                                } catch { }
                                 setCardModal({
                                   isOpen: true,
                                   isEditing: true,
@@ -591,14 +735,14 @@ export default function AdminDashboard() {
                             >
                               <Edit3 className="w-3.5 h-3.5" /> Edit Card
                             </button>
-                            <button 
+                            <button
                               onClick={() => setDeleteModal({ isOpen: true, id: t.id, type: 'template' })}
                               className="px-3 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-colors shadow-sm"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
-                          <button 
+                          <button
                             onClick={() => startEditing(t.id, t.price)}
                             className="w-full py-1.5 rounded-lg border border-gray-200 text-gray-600 font-bold text-[11px] hover:bg-gray-50 transition-colors"
                           >
@@ -622,7 +766,7 @@ export default function AdminDashboard() {
           {activeTab === "animations" && (
             <div className="space-y-6">
               <div className="flex justify-end">
-                <button 
+                <button
                   onClick={() => setAnimationModal({
                     isOpen: true,
                     isEditing: false,
@@ -639,35 +783,35 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data.animations.map((a: any) => (
-                <div key={a.id} className="bg-white rounded-2xl border border-[#D4AF37]/20 p-5 shadow-soft-surface flex flex-col group">
-                  <div className="relative w-full aspect-video bg-gray-100 rounded-xl overflow-hidden mb-4 border border-gray-100">
-                    <img src={a.previewPosterUrl || 'https://placehold.co/600x400/FAF8F5/8C4A52?text=Animation'} alt={a.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                      <PlayCircle className="w-10 h-10 text-white opacity-80" />
+                  <div key={a.id} className="bg-white rounded-2xl border border-[#D4AF37]/20 p-5 shadow-soft-surface flex flex-col group">
+                    <div className="relative w-full aspect-video bg-gray-100 rounded-xl overflow-hidden mb-4 border border-gray-100">
+                      <img src={a.previewPosterUrl || 'https://placehold.co/600x400/FAF8F5/8C4A52?text=Animation'} alt={a.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <PlayCircle className="w-10 h-10 text-white opacity-80" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h4 className="font-bold text-lg leading-tight">{a.name}</h4>
-                      <div className="text-sm font-bold text-[#7C7267]">Price: ৳{a.price}</div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="font-bold text-lg leading-tight">{a.name}</h4>
+                        <div className="text-sm font-bold text-[#7C7267]">Price: ৳{a.price}</div>
+                      </div>
                     </div>
-                  </div>
                     {editingPrice === a.id ? (
                       <div className="mt-auto flex gap-2">
-                        <input 
-                          type="number" 
-                          value={editValue} 
-                          onChange={(e) => setEditValue(e.target.value)} 
+                        <input
+                          type="number"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
                           className="w-full px-3 py-2 border border-[#D4AF37]/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm font-bold"
                           autoFocus
                         />
-                        <button 
+                        <button
                           onClick={() => handlePriceUpdate('animation', a.id)}
                           className="px-4 py-2 rounded-xl bg-[#8C4A52] text-white font-bold hover:bg-[#7a3e45] transition-colors text-sm shadow-sm"
                         >
                           Save
                         </button>
-                        <button 
+                        <button
                           onClick={() => setEditingPrice(null)}
                           className="px-3 py-2 rounded-xl bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors text-sm shadow-sm"
                         >
@@ -677,7 +821,7 @@ export default function AdminDashboard() {
                     ) : (
                       <div className="mt-auto flex flex-col gap-2">
                         <div className="flex gap-2">
-                          <button 
+                          <button
                             onClick={() => setAnimationModal({
                               isOpen: true,
                               isEditing: true,
@@ -691,14 +835,14 @@ export default function AdminDashboard() {
                           >
                             <Edit3 className="w-3.5 h-3.5" /> Edit Animation
                           </button>
-                          <button 
+                          <button
                             onClick={() => setDeleteModal({ isOpen: true, id: a.id, type: 'animation' })}
                             className="px-3 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-colors shadow-sm"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                        <button 
+                        <button
                           onClick={() => startEditing(a.id, a.price)}
                           className="w-full py-1.5 rounded-lg border border-gray-200 text-gray-600 font-bold text-[11px] hover:bg-gray-50 transition-colors"
                         >
@@ -753,21 +897,21 @@ export default function AdminDashboard() {
 
                     {editingPrice === t.id ? (
                       <div className="mt-auto flex gap-2">
-                        <input 
-                          type="number" 
-                          value={editValue} 
-                          onChange={(e) => setEditValue(e.target.value)} 
+                        <input
+                          type="number"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
                           className="w-full px-3 py-2 border border-[#D4AF37]/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm font-bold"
                           autoFocus
                           placeholder="Price in ৳"
                         />
-                        <button 
+                        <button
                           onClick={() => handlePriceUpdate('template', t.id)}
                           className="px-4 py-2 rounded-xl bg-[#8C4A52] text-white font-bold hover:bg-[#7a3e45] transition-colors text-sm shadow-sm"
                         >
                           Save
                         </button>
-                        <button 
+                        <button
                           onClick={() => setEditingPrice(null)}
                           className="px-3 py-2 rounded-xl bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors text-sm shadow-sm"
                         >
@@ -776,7 +920,7 @@ export default function AdminDashboard() {
                       </div>
                     ) : (
                       <div className="mt-auto flex flex-col gap-2">
-                        <button 
+                        <button
                           onClick={() => startEditing(t.id, t.price)}
                           className="w-full py-2.5 rounded-xl bg-[#2C2623] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#1a1614] transition-colors text-xs shadow-sm"
                         >
@@ -809,20 +953,20 @@ export default function AdminDashboard() {
                   </div>
                   {editingPrice === d.id ? (
                     <div className="mt-auto flex gap-2">
-                      <input 
-                        type="number" 
-                        value={editValue} 
-                        onChange={(e) => setEditValue(e.target.value)} 
+                      <input
+                        type="number"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
                         className="w-full px-3 py-2 border border-[#D4AF37]/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm font-bold"
                         autoFocus
                       />
-                      <button 
+                      <button
                         onClick={() => handlePriceUpdate('duration', d.id)}
                         className="px-4 py-2 rounded-xl bg-[#8C4A52] text-white font-bold hover:bg-[#7a3e45] transition-colors text-sm shadow-sm"
                       >
                         Save
                       </button>
-                      <button 
+                      <button
                         onClick={() => setEditingPrice(null)}
                         className="px-3 py-2 rounded-xl bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors text-sm shadow-sm"
                       >
@@ -830,7 +974,7 @@ export default function AdminDashboard() {
                       </button>
                     </div>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => startEditing(d.id, d.price)}
                       className="mt-auto w-full py-2.5 rounded-xl bg-[#2C2623] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#1a1614] transition-colors text-sm shadow-sm"
                     >
@@ -863,7 +1007,7 @@ export default function AdminDashboard() {
                     ) : (
                       data.users.map((u: any) => (
                         <React.Fragment key={u.id}>
-                          <tr 
+                          <tr
                             className="hover:bg-gray-50 transition-colors cursor-pointer group"
                             onClick={() => setExpandedUserId(expandedUserId === u.id ? null : u.id)}
                           >
@@ -936,7 +1080,7 @@ export default function AdminDashboard() {
                         <div className="text-xs text-gray-400">{new Date(m.createdAt).toLocaleDateString()}</div>
                       </div>
                       <p className="text-gray-700 font-serif italic mb-4">{m.message}</p>
-                      
+
                       {m.status === 'REPLIED' && m.adminReply ? (
                         <div className="bg-white p-4 rounded-lg border border-green-200 border-l-4 border-l-green-500">
                           <div className="text-xs font-bold text-green-700 mb-1">Your Reply:</div>
@@ -973,6 +1117,508 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {/* Payments Tab */}
+          {activeTab === "payments" && (
+            <div className="space-y-8">
+              {/* Header Info Banner */}
+              <div className="p-6 bg-white rounded-3xl border border-[#D4AF37]/30 shadow-soft-surface flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#8C4A52]">
+                      Utshob Payment System
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-xl text-[#2C2623] mt-1" style={{ fontFamily: "Cinzel, serif" }}>
+                    MFS Payment Gateways &amp; Transaction Verification
+                  </h3>
+                  <p className="text-xs text-[#7C7267] mt-1">
+                    Configure bKash, Nagad, and Rocket numbers and instructions. Verify and approve customer payment TrxIDs.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchPaymentsData}
+                  disabled={loadingPayments}
+                  className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold flex items-center gap-2 transition-all self-start md:self-auto cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingPayments ? "animate-spin" : ""}`} />
+                  <span>Refresh Data</span>
+                </button>
+              </div>
+
+              {/* Section 1: MFS Gateways Configuration Cards */}
+              <div>
+                <h4 className="text-sm font-bold text-[#2C2623] uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-[#8C4A52]" />
+                  <span>MFS Gateway Configurations (bKash, Nagad, Rocket)</span>
+                </h4>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {paymentMethods.map((m) => {
+                    const isSaving = savingMethodId === m.methodId;
+                    const brandColor =
+                      m.methodId === "bkash"
+                        ? "#E2136E"
+                        : m.methodId === "nagad"
+                          ? "#F7941D"
+                          : "#8C3494";
+
+                    const currentSubTab = adminActiveSubTab[m.methodId] || (m.accountType as any) || "MERCHANT";
+
+                    return (
+                      <div
+                        key={m.methodId}
+                        className="bg-white rounded-3xl border border-[#D4AF37]/30 p-6 shadow-soft-surface flex flex-col justify-between relative overflow-hidden"
+                      >
+                        {/* Top Color Accent */}
+                        <div
+                          className="absolute top-0 left-0 right-0 h-1.5"
+                          style={{ backgroundColor: brandColor }}
+                        />
+
+                        <div className="space-y-4">
+                          {/* Method Title & Active Toggle */}
+                          <div className="flex items-center justify-between pt-1">
+                            <div className="flex items-center gap-3">
+                              {/* অফিশিয়াল লোগো কন্টেইনার */}
+                              <div className="w-12 h-10 rounded-xl bg-white border border-stone-200/80 shadow-xs p-1 flex items-center justify-center overflow-hidden">
+                                <img
+                                  src={`/assets/payment-gateway/${m.methodId}.png`}
+                                  alt={m.name}
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+
+                              <div>
+                                <h5 className="font-bold text-base text-[#2C2623]">{m.name}</h5>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                  {m.methodId} Gateway
+                                </span>
+                              </div>
+                            </div>
+
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <span className={`text-xs font-bold ${m.isActive ? "text-emerald-600" : "text-gray-400"}`}>
+                                {m.isActive ? "Active" : "Disabled"}
+                              </span>
+                              <input
+                                type="checkbox"
+                                checked={m.isActive}
+                                onChange={(e) =>
+                                  handleUpdatePaymentMethodField(m.methodId, "isActive", e.target.checked)
+                                }
+                                className="w-4 h-4 accent-[#8C4A52] cursor-pointer"
+                              />
+                            </label>
+                          </div>
+
+                          {/* Default Account Type in Modal */}
+                          <div className="p-3 bg-stone-50 rounded-2xl border border-stone-200/70">
+                            <label className="block text-[11px] font-bold text-[#7C7267] uppercase tracking-wider mb-1">
+                              Default Checkout Option (Default Tab)
+                            </label>
+                            <select
+                              value={m.accountType || "MERCHANT"}
+                              onChange={(e) => {
+                                const newType = e.target.value;
+                                handleUpdatePaymentMethodField(m.methodId, "accountType", newType);
+                                setAdminActiveSubTab((prev) => ({ ...prev, [m.methodId]: newType as any }));
+                              }}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-xs font-bold bg-white text-[#2C2623]"
+                            >
+                              <option value="MERCHANT">Merchant Payment (Make Payment)</option>
+                              <option value="PERSONAL">Personal (Send Money)</option>
+                              <option value="AGENT">Agent (Cash Out)</option>
+                            </select>
+                            <p className="text-[10px] text-gray-500 mt-1">
+                              This option will be selected by default when customers open checkout.
+                            </p>
+                          </div>
+
+                          {/* Account Type Sub-Tabs */}
+                          <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[11px] font-bold text-[#2C2623] uppercase tracking-wider">
+                                Configure Account Type Settings:
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-1 p-1 bg-stone-100 rounded-xl border border-stone-200">
+                              {(["MERCHANT", "PERSONAL", "AGENT"] as const).map((type) => {
+                                const isSelected = currentSubTab === type;
+                                const label =
+                                  type === "MERCHANT" ? "🛍️ Merchant" : type === "PERSONAL" ? "👤 Personal" : "🏪 Agent";
+                                return (
+                                  <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => setAdminActiveSubTab((prev) => ({ ...prev, [m.methodId]: type }))}
+                                    className={`py-1.5 px-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer text-center ${isSelected
+                                      ? "bg-white text-[#8C4A52] shadow-xs"
+                                      : "text-stone-600 hover:text-stone-900"
+                                      }`}
+                                  >
+                                    {label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Sub-Tab Input Form Fields */}
+                          <div className="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#D4AF37]/30 space-y-3">
+                            {currentSubTab === "MERCHANT" && (
+                              <>
+                                <div className="flex items-center justify-between pb-1 border-b border-[#D4AF37]/20">
+                                  <span className="text-xs font-bold text-[#8C4A52]">Merchant Settings (Make Payment)</span>
+                                  <span className="text-[10px] bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-bold">
+                                    Merchant
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-bold text-[#2C2623] mb-1">
+                                    Merchant Account Number
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={m.merchantNumber ?? m.number ?? ""}
+                                    onChange={(e) =>
+                                      handleUpdatePaymentMethodField(m.methodId, "merchantNumber", e.target.value)
+                                    }
+                                    placeholder="e.g. 01892-019281"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-xs font-mono font-bold text-[#2C2623] bg-white"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-bold text-[#2C2623] mb-1">
+                                    Counter Number (Counter No)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={m.merchantCounter ?? m.counter ?? "1"}
+                                    onChange={(e) =>
+                                      handleUpdatePaymentMethodField(m.methodId, "merchantCounter", e.target.value)
+                                    }
+                                    placeholder="1"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-xs font-mono font-bold text-[#2C2623] bg-white"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-bold text-[#2C2623] mb-1">
+                                    Customer Payment Instructions
+                                  </label>
+                                  <textarea
+                                    rows={4}
+                                    value={m.merchantInstructions ?? m.instructions ?? ""}
+                                    onChange={(e) =>
+                                      handleUpdatePaymentMethodField(m.methodId, "merchantInstructions", e.target.value)
+                                    }
+                                    placeholder="Enter instructions for customers on how to make payment from their app..."
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-xs text-[#2C2623] leading-relaxed bg-white"
+                                  />
+                                </div>
+                              </>
+                            )}
+
+                            {currentSubTab === "PERSONAL" && (
+                              <>
+                                <div className="flex items-center justify-between pb-1 border-b border-[#D4AF37]/20">
+                                  <span className="text-xs font-bold text-[#8C4A52]">Personal Settings (Send Money)</span>
+                                  <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                                    Personal
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-bold text-[#2C2623] mb-1">
+                                    Personal Account Number
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={m.personalNumber ?? m.number ?? ""}
+                                    onChange={(e) =>
+                                      handleUpdatePaymentMethodField(m.methodId, "personalNumber", e.target.value)
+                                    }
+                                    placeholder="e.g. 01892-019281"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-xs font-mono font-bold text-[#2C2623] bg-white"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-bold text-[#2C2623] mb-1">
+                                    Customer Send Money Instructions
+                                  </label>
+                                  <textarea
+                                    rows={4}
+                                    value={m.personalInstructions ?? ""}
+                                    onChange={(e) =>
+                                      handleUpdatePaymentMethodField(m.methodId, "personalInstructions", e.target.value)
+                                    }
+                                    placeholder="Enter instructions for customers on how to send money from their app..."
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-xs text-[#2C2623] leading-relaxed bg-white"
+                                  />
+                                </div>
+                              </>
+                            )}
+
+                            {currentSubTab === "AGENT" && (
+                              <>
+                                <div className="flex items-center justify-between pb-1 border-b border-[#D4AF37]/20">
+                                  <span className="text-xs font-bold text-[#8C4A52]">Agent Settings (Cash Out)</span>
+                                  <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">
+                                    Agent
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-bold text-[#2C2623] mb-1">
+                                    Agent Account Number
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={m.agentNumber ?? m.number ?? ""}
+                                    onChange={(e) =>
+                                      handleUpdatePaymentMethodField(m.methodId, "agentNumber", e.target.value)
+                                    }
+                                    placeholder="e.g. 01892-019281"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-xs font-mono font-bold text-[#2C2623] bg-white"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-bold text-[#2C2623] mb-1">
+                                    Customer Cash Out Instructions
+                                  </label>
+                                  <textarea
+                                    rows={4}
+                                    value={m.agentInstructions ?? ""}
+                                    onChange={(e) =>
+                                      handleUpdatePaymentMethodField(m.methodId, "agentInstructions", e.target.value)
+                                    }
+                                    placeholder="Enter instructions for customers on how to cash out from their app or agent point..."
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-xs text-[#2C2623] leading-relaxed bg-white"
+                                  />
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Save Button */}
+                        <div className="pt-4 mt-4 border-t border-gray-100">
+                          <button
+                            type="button"
+                            onClick={() => handleSavePaymentMethod(m)}
+                            disabled={isSaving}
+                            className="w-full py-2.5 rounded-xl text-white font-bold text-xs shadow-xs hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                            style={{ backgroundColor: brandColor }}
+                          >
+                            {isSaving ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Save className="w-3.5 h-3.5" />
+                                <span>Save {m.name} Settings</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section 2: Submitted Customer Transactions Table */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-bold text-[#2C2623] uppercase tracking-wider flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-[#8C4A52]" />
+                    <span>Customer Payments &amp; Transaction History ({paymentTransactions.length})</span>
+                  </h4>
+                </div>
+
+                <div className="bg-white rounded-3xl border border-[#D4AF37]/30 shadow-soft-surface overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs text-[#2C2623]">
+                      <thead className="bg-[#FAF8F5] border-b border-[#D4AF37]/20 uppercase text-[10px] font-bold text-[#7C7267] tracking-wider">
+                        <tr>
+                          <th className="px-5 py-4">Order # &amp; Date</th>
+                          <th className="px-5 py-4">Customer</th>
+                          <th className="px-5 py-4">Invitation Card</th>
+                          <th className="px-5 py-4">Channel</th>
+                          <th className="px-5 py-4">Sender Wallet No</th>
+                          <th className="px-5 py-4">TrxID</th>
+                          <th className="px-5 py-4">Amount</th>
+                          <th className="px-5 py-4">Status</th>
+                          <th className="px-5 py-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {paymentTransactions.length === 0 ? (
+                          <tr>
+                            <td colSpan={9} className="px-5 py-12 text-center text-[#7C7267] italic font-serif">
+                              No payment transactions found.
+                            </td>
+                          </tr>
+                        ) : (
+                          paymentTransactions.map((txn) => {
+                            const isActioning = actionTxnId === txn.id;
+                            const order = txn.paymentOrder;
+                            const inv = order?.invitation;
+                            const user = order?.user;
+
+                            const statusColor =
+                              txn.status === "APPROVED" || txn.status === "SUCCESS"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                : txn.status === "REJECTED" || txn.status === "FAILED"
+                                  ? "bg-red-50 text-red-700 border-red-200"
+                                  : "bg-amber-50 text-amber-700 border-amber-200";
+
+                            return (
+                              <tr key={txn.id} className="hover:bg-gray-50/80 transition-colors">
+                                <td className="px-5 py-4">
+                                  <div className="font-mono font-bold text-[#2C2623]">
+                                    {order?.orderNumber || "N/A"}
+                                  </div>
+                                  <div className="text-[10px] text-gray-400 mt-0.5">
+                                    {new Date(txn.createdAt).toLocaleDateString("en-GB", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </div>
+                                </td>
+
+                                <td className="px-5 py-4">
+                                  <div className="font-bold text-[#2C2623]">{user?.name || "Customer"}</div>
+                                  <div className="text-[11px] text-gray-500 font-mono">{user?.phone || user?.email}</div>
+                                </td>
+
+                                <td className="px-5 py-4">
+                                  {inv ? (
+                                    <div>
+                                      <Link
+                                        href={`/invite/${inv.slug}`}
+                                        target="_blank"
+                                        className="font-bold text-[#8C4A52] hover:underline flex items-center gap-1"
+                                      >
+                                        <span>{inv.title || inv.slug}</span>
+                                        <ExternalLink className="w-3 h-3" />
+                                      </Link>
+                                      <span className="text-[10px] text-gray-400 font-mono">{inv.slug}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-400 italic">No card linked</span>
+                                  )}
+                                </td>
+
+                                <td className="px-5 py-4">
+                                  <span
+                                    className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${order?.gateway === "bkash"
+                                      ? "bg-pink-100 text-pink-700"
+                                      : order?.gateway === "nagad"
+                                        ? "bg-orange-100 text-orange-700"
+                                        : "bg-purple-100 text-purple-700"
+                                      }`}
+                                  >
+                                    {order?.gateway || "MFS"}
+                                  </span>
+                                </td>
+
+                                <td className="px-5 py-4">
+                                  <span className="font-mono font-bold text-gray-800">
+                                    {txn.senderNumber || "N/A"}
+                                  </span>
+                                </td>
+
+                                <td className="px-5 py-4">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-mono font-bold text-xs bg-gray-100 px-2 py-0.5 rounded text-[#2C2623]">
+                                      {txn.trxId || "N/A"}
+                                    </span>
+                                    {txn.trxId && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(txn.trxId);
+                                          setCopiedTrxId(txn.trxId);
+                                          setTimeout(() => setCopiedTrxId(null), 1500);
+                                        }}
+                                        className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                                        title="Copy TrxID"
+                                      >
+                                        {copiedTrxId === txn.trxId ? (
+                                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                        ) : (
+                                          <Copy className="w-3.5 h-3.5" />
+                                        )}
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+
+                                <td className="px-5 py-4">
+                                  <span className="font-bold text-sm text-[#8C4A52]">
+                                    ৳{order?.amount ?? 0}
+                                  </span>
+                                </td>
+
+                                <td className="px-5 py-4">
+                                  <span
+                                    className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusColor}`}
+                                  >
+                                    {txn.status}
+                                  </span>
+                                </td>
+
+                                <td className="px-5 py-4 text-right">
+                                  {txn.status === "PENDING" ? (
+                                    <div className="flex items-center justify-end gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleTransactionAction(txn, "APPROVE")}
+                                        disabled={isActioning}
+                                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs flex items-center gap-1 transition-all disabled:opacity-50 cursor-pointer"
+                                      >
+                                        {isActioning ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                                        <span>Approve</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleTransactionAction(txn, "REJECT")}
+                                        disabled={isActioning}
+                                        className="px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[11px] border border-red-200 transition-all disabled:opacity-50 cursor-pointer"
+                                      >
+                                        Reject
+                                      </button>
+                                    </div>
+                                  ) : txn.status === "APPROVED" || txn.status === "SUCCESS" ? (
+                                    <span className="text-[11px] font-bold text-emerald-600 inline-flex items-center gap-1">
+                                      <CheckCircle2 className="w-3.5 h-3.5" /> Approved
+                                    </span>
+                                  ) : (
+                                    <span className="text-[11px] font-bold text-red-500">
+                                      Rejected
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Card Modal (Add & Edit) */}
@@ -991,10 +1637,10 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-[#2C2623] uppercase tracking-wide mb-1">Card Name</label>
-                  <input 
-                    type="text" 
-                    value={cardModal.name} 
-                    onChange={(e) => setCardModal({ ...cardModal, name: e.target.value })} 
+                  <input
+                    type="text"
+                    value={cardModal.name}
+                    onChange={(e) => setCardModal({ ...cardModal, name: e.target.value })}
                     placeholder="e.g. Royal Heritage"
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm"
                   />
@@ -1003,9 +1649,9 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-[#2C2623] uppercase tracking-wide mb-1">Category</label>
-                    <select 
-                      value={cardModal.categoryId} 
-                      onChange={(e) => setCardModal({ ...cardModal, categoryId: e.target.value })} 
+                    <select
+                      value={cardModal.categoryId}
+                      onChange={(e) => setCardModal({ ...cardModal, categoryId: e.target.value })}
                       className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm bg-white"
                     >
                       {data.categories.map((c: any) => (
@@ -1016,10 +1662,10 @@ export default function AdminDashboard() {
 
                   <div>
                     <label className="block text-xs font-bold text-[#2C2623] uppercase tracking-wide mb-1">Price (৳)</label>
-                    <input 
-                      type="number" 
-                      value={cardModal.price} 
-                      onChange={(e) => setCardModal({ ...cardModal, price: e.target.value })} 
+                    <input
+                      type="number"
+                      value={cardModal.price}
+                      onChange={(e) => setCardModal({ ...cardModal, price: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm"
                     />
                   </div>
@@ -1040,10 +1686,10 @@ export default function AdminDashboard() {
                       <div className="w-full py-3 px-4 border-2 border-dashed border-[#D4AF37]/40 rounded-xl flex items-center justify-center text-xs font-bold text-[#7C7267] hover:bg-[#F9F0EC] transition-colors">
                         {uploadingFile ? <Loader2 className="w-4 h-4 animate-spin text-[#8C4A52]" /> : 'Select Image File to Upload'}
                       </div>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
@@ -1211,14 +1857,14 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">
-                  <button 
-                    onClick={() => setCardModal(null)} 
+                  <button
+                    onClick={() => setCardModal(null)}
                     className="px-5 py-2.5 rounded-xl text-gray-500 font-bold hover:bg-gray-100 text-sm"
                   >
                     Cancel
                   </button>
-                  <button 
-                    onClick={handleSaveCard} 
+                  <button
+                    onClick={handleSaveCard}
                     disabled={uploadingFile}
                     className="px-6 py-2.5 rounded-xl bg-[#8C4A52] text-white font-bold hover:bg-[#7a3e45] text-sm shadow-sm transition-all"
                   >
@@ -1246,10 +1892,10 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-[#2C2623] uppercase tracking-wide mb-1">Animation Name</label>
-                  <input 
-                    type="text" 
-                    value={animationModal.name} 
-                    onChange={(e) => setAnimationModal({ ...animationModal, name: e.target.value })} 
+                  <input
+                    type="text"
+                    value={animationModal.name}
+                    onChange={(e) => setAnimationModal({ ...animationModal, name: e.target.value })}
                     placeholder="e.g. Royal Curtain Reveal"
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm"
                   />
@@ -1257,10 +1903,10 @@ export default function AdminDashboard() {
 
                 <div>
                   <label className="block text-xs font-bold text-[#2C2623] uppercase tracking-wide mb-1">Price (৳)</label>
-                  <input 
-                    type="number" 
-                    value={animationModal.price} 
-                    onChange={(e) => setAnimationModal({ ...animationModal, price: e.target.value })} 
+                  <input
+                    type="number"
+                    value={animationModal.price}
+                    onChange={(e) => setAnimationModal({ ...animationModal, price: e.target.value })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm"
                   />
                 </div>
@@ -1275,10 +1921,10 @@ export default function AdminDashboard() {
                       <span className="truncate">{animationModal.videoUrl || 'Select Video File'}</span>
                       {uploadingFile ? <Loader2 className="w-4 h-4 animate-spin text-[#8C4A52]" /> : <PlayCircle className="w-4 h-4 text-[#8C4A52]" />}
                     </div>
-                    <input 
-                      type="file" 
-                      accept="video/*" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      accept="video/*"
+                      className="hidden"
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
@@ -1300,10 +1946,10 @@ export default function AdminDashboard() {
                       <span className="truncate">{animationModal.previewPosterUrl || 'Select Poster Image'}</span>
                       {uploadingFile ? <Loader2 className="w-4 h-4 animate-spin text-[#8C4A52]" /> : <LayoutTemplate className="w-4 h-4 text-[#8C4A52]" />}
                     </div>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
@@ -1316,14 +1962,14 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">
-                  <button 
-                    onClick={() => setAnimationModal(null)} 
+                  <button
+                    onClick={() => setAnimationModal(null)}
                     className="px-5 py-2.5 rounded-xl text-gray-500 font-bold hover:bg-gray-100 text-sm"
                   >
                     Cancel
                   </button>
-                  <button 
-                    onClick={handleSaveAnimation} 
+                  <button
+                    onClick={handleSaveAnimation}
                     disabled={uploadingFile}
                     className="px-6 py-2.5 rounded-xl bg-[#8C4A52] text-white font-bold hover:bg-[#7a3e45] text-sm shadow-sm transition-all"
                   >
@@ -1342,13 +1988,13 @@ export default function AdminDashboard() {
               <h3 className="text-xl font-bold text-[#2C2623] mb-2 font-serif">Confirm Delete</h3>
               <p className="text-[#7C7267] mb-6 font-serif">Are you sure to delete it?</p>
               <div className="flex gap-4 justify-end">
-                <button 
+                <button
                   onClick={() => setDeleteModal(null)}
                   className="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={confirmDelete}
                   className="px-4 py-2 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition-colors shadow-sm"
                 >
@@ -1356,6 +2002,87 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Payment Transaction In-App Confirmation Modal */}
+        {paymentActionModal && paymentActionModal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200 animate-slide-up space-y-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center ${paymentActionModal.action === "APPROVE"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-red-100 text-red-700"
+                    }`}
+                >
+                  {paymentActionModal.action === "APPROVE" ? (
+                    <CheckCircle2 className="w-6 h-6" />
+                  ) : (
+                    <AlertCircle className="w-6 h-6" />
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg text-[#2C2623]">
+                    {paymentActionModal.action === "APPROVE"
+                      ? "Approve Transaction"
+                      : "Reject Transaction"}
+                  </h4>
+                  <span className="text-xs text-gray-500 font-mono">
+                    Order: {paymentActionModal.orderNumber || "N/A"}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {paymentActionModal.action === "APPROVE"
+                  ? `Are you sure you want to approve this payment of ৳${paymentActionModal.amount ?? 0}? This will immediately activate the invitation card and set its link validity.`
+                  : `Are you sure you want to reject this payment transaction? The invitation card will remain unapproved.`}
+              </p>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentActionModal(null)}
+                  className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={executeTransactionAction}
+                  disabled={actionTxnId === paymentActionModal.transactionId}
+                  className={`px-5 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer ${paymentActionModal.action === "APPROVE"
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-red-600 hover:bg-red-700"
+                    }`}
+                >
+                  {actionTxnId === paymentActionModal.transactionId ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <span>
+                      {paymentActionModal.action === "APPROVE"
+                        ? "Confirm & Approve"
+                        : "Confirm & Reject"}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* In-App Toast Notification */}
+        {toastNotification && (
+          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border bg-white border-stone-200 animate-slide-up">
+            {toastNotification.type === "success" ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+            )}
+            <span className="text-xs font-bold text-[#2C2623]">
+              {toastNotification.message}
+            </span>
           </div>
         )}
 

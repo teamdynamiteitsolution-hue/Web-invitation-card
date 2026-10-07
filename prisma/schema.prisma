@@ -190,10 +190,39 @@ model PaymentTransaction {
   paymentOrderId  String
   paymentOrder    PaymentOrder @relation(fields: [paymentOrderId], references: [id], onDelete: Cascade)
   trxId           String?      @unique
+  senderNumber    String?
   gatewayRef      String?
   rawResponse     String?
-  status          String       @default("INITIAL") // "INITIAL" | "PENDING" | "SUCCESS" | "FAILED" | "REFUNDED"
+  status          String       @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED" | "SUCCESS" | "FAILED"
   createdAt       DateTime     @default(now())
+}
+
+model PaymentMethodSetting {
+  id                   String   @id @default(cuid())
+  methodId             String   @unique // "bkash", "nagad", "rocket"
+  name                 String
+  isActive             Boolean  @default(true)
+  accountType          String   @default("MERCHANT") // "MERCHANT", "PERSONAL", "AGENT"
+
+  // Legacy / fallback fields
+  number               String   @default("")
+  counter              String   @default("1")
+  instructions         String   @default("")
+
+  // Distinct account-type configs
+  merchantNumber       String   @default("")
+  merchantCounter      String   @default("1")
+  merchantInstructions String   @default("")
+
+  personalNumber       String   @default("")
+  personalInstructions String   @default("")
+
+  agentNumber          String   @default("")
+  agentInstructions    String   @default("")
+
+  displayOrder         Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }
 
 model UserSubscription {

@@ -11,6 +11,7 @@ import ScrollExperience from "@/experiences/scroll-experience/ScrollExperience";
 
 import { resolveCanonicalInvitation } from "@/lib/canonical-invitation";
 import { AudioPlayer } from "@/components/AudioPlayer";
+import PaymentGatewayModal from "@/components/PaymentGatewayModal";
 
 const DURATION_TIERS = [
   { days: 15, label: "15 Days", badge: "Standard", price: 0, desc: "Default link validity" },
@@ -25,9 +26,6 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
   const [selectedDuration, setSelectedDuration] = useState<number>(15);
   const [showPayModal, setShowPayModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<"bkash" | "nagad" | "rocket" | null>(null);
-
-  const [isPaying, setIsPaying] = useState(false);
 
   // Dynamic pricing calculation based on base template/animation + chosen duration
   const basePrice = (invitation.template?.price || 0) + (invitation.animation?.price || 0);
@@ -45,39 +43,6 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
     }, 2500);
   };
 
-  const handleGenerateLink = async () => {
-    if (!selectedMethod) {
-      alert("Please select a payment method");
-      return;
-    }
-    setIsPaying(true);
-    try {
-      const res = await fetch("/api/checkout/pay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slug: invitation.slug,
-          gateway: selectedMethod,
-          durationDays: selectedDuration,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          router.push(`/checkout/${invitation.slug}/success`);
-          return;
-        }
-      }
-      alert("Payment processing failed. Please try again.");
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred during payment.");
-    } finally {
-      setIsPaying(false);
-    }
-  };
-
   // Resolve preview component based on template experience type
   let PreviewComponent: any = DynamicCardExperience;
   if (isScroll || experienceType === 'scroll' || experienceType === 'scroll_story') PreviewComponent = ScrollExperience;
@@ -87,18 +52,17 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8 md:py-16 flex flex-col lg:flex-row gap-8 lg:gap-12">
-      
+
       {/* Left side: Customized Live Preview Card */}
       <div className="w-full lg:w-1/2 flex flex-col items-center">
         <div className="text-xs font-bold uppercase tracking-wider text-[#8C4A52] mb-3 flex items-center gap-1.5 self-start sm:self-center">
           <span>✨ Your Customized Invitation</span>
         </div>
-        <div className={`relative w-full max-w-[390px] ${
-          isScroll 
-            ? 'h-[500px] overflow-y-auto rounded-[32px] border-4 border-[#D4AF37]/30 shadow-2xl bg-[#FAF8F5] scroll-smooth' 
+        <div className={`relative w-full max-w-[390px] ${isScroll
+            ? 'h-[500px] overflow-y-auto rounded-[32px] border-4 border-[#D4AF37]/30 shadow-2xl bg-[#FAF8F5] scroll-smooth'
             : 'aspect-[4/5] rounded-[32px] overflow-hidden shadow-2xl border-4 border-[#D4AF37]/30 bg-[#FAF8F5]'
-        }`}>
-          <PreviewComponent 
+          }`}>
+          <PreviewComponent
             template={canonicalTemplate}
             animation={canonicalAnimation}
             eventData={canonicalEventData}
@@ -133,19 +97,17 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
                   key={tier.days}
                   type="button"
                   onClick={() => setSelectedDuration(tier.days)}
-                  className={`p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between ${
-                    isSelected
+                  className={`p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between ${isSelected
                       ? 'border-[#8C4A52] bg-[#8C4A52]/5 ring-2 ring-[#8C4A52]/20 shadow-sm'
                       : 'border-[#D4AF37]/30 bg-white hover:border-[#8C4A52]/40 hover:bg-stone-50'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className={`text-xs font-bold ${isSelected ? 'text-[#8C4A52]' : 'text-[#2C2623]'}`}>
                       {tier.label}
                     </span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
-                      tier.price === 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                    }`}>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${tier.price === 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
                       {tier.price === 0 ? 'Free' : `+৳${tier.price}`}
                     </span>
                   </div>
@@ -158,32 +120,32 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
 
         {/* Summary Breakdown */}
         <div className="bg-white rounded-3xl p-6 shadow-soft-surface border border-[#D4AF37]/20 mb-8">
-           <div className="space-y-2 text-sm text-[#7C7267] pb-4 border-b border-gray-100">
-             <div className="flex justify-between items-center">
-               <span>Base Design &amp; Animation</span>
-               <span className="font-semibold text-[#2C2623]">৳{basePrice}</span>
-             </div>
-             <div className="flex justify-between items-center">
-               <span>Link Validity ({selectedDuration} Days)</span>
-               <span className="font-semibold text-[#2C2623]">{durationPrice === 0 ? 'Included (৳0)' : `+৳${durationPrice}`}</span>
-             </div>
-           </div>
-           <div className="flex justify-between items-center pt-4">
-              <span className="text-[#8C4A52] font-bold uppercase tracking-wider text-sm">Total Payable</span>
-              <span className="font-bold text-3xl text-[#D4AF37]" style={{ fontFamily: 'Cinzel, serif' }}>৳{currentTotal}</span>
-           </div>
+          <div className="space-y-2 text-sm text-[#7C7267] pb-4 border-b border-gray-100">
+            <div className="flex justify-between items-center">
+              <span>Base Design &amp; Animation</span>
+              <span className="font-semibold text-[#2C2623]">৳{basePrice}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>Link Validity ({selectedDuration} Days)</span>
+              <span className="font-semibold text-[#2C2623]">{durationPrice === 0 ? 'Included (৳0)' : `+৳${durationPrice}`}</span>
+            </div>
+          </div>
+          <div className="flex justify-between items-center pt-4">
+            <span className="text-[#8C4A52] font-bold uppercase tracking-wider text-sm">Total Payable</span>
+            <span className="font-bold text-3xl text-[#D4AF37]" style={{ fontFamily: 'Cinzel, serif' }}>৳{currentTotal}</span>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
-          <button 
+          <button
             onClick={() => setShowPayModal(true)}
             className="flex-1 py-4 px-6 rounded-full bg-[#8C4A52] text-white font-bold shadow-elevated-card hover:bg-[#7a3e45] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             <CreditCard className="w-5 h-5" />
-            Pay Now &amp; Generate Link
+            Pay &amp; Generate Link
           </button>
-          
-          <button 
+
+          <button
             onClick={handleSaveLater}
             className="flex-1 py-4 px-6 rounded-full bg-white text-[#2C2623] border border-[#D4AF37]/40 font-bold shadow-soft-surface hover:bg-[#F9F0EC] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
           >
@@ -209,69 +171,14 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
         </div>
       )}
 
-      {/* Payment Modal */}
-      {showPayModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-[32px] p-8 max-w-md w-full relative shadow-2xl border border-[#D4AF37]/30 transform scale-100 animate-slide-up">
-            <button 
-              onClick={() => setShowPayModal(false)}
-              className="absolute top-6 right-6 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <h3 className="text-2xl font-bold text-[#2C2623] mb-1" style={{ fontFamily: 'Cinzel, serif' }}>Secure Checkout</h3>
-            <p className="text-[#7C7267] font-serif text-xs italic mb-6">Selected Duration: <span className="font-bold text-[#8C4A52]">{selectedDuration} Days</span></p>
-
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {[
-                { id: 'bkash', name: 'bKash', color: 'bg-pink-50 border-pink-200 text-pink-600' },
-                { id: 'nagad', name: 'Nagad', color: 'bg-orange-50 border-orange-200 text-orange-600' },
-                { id: 'rocket', name: 'Rocket', color: 'bg-purple-50 border-purple-200 text-purple-600' }
-              ].map(method => (
-                <button
-                  key={method.id}
-                  onClick={() => setSelectedMethod(method.id as any)}
-                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${selectedMethod === method.id ? `border-[#8C4A52] bg-[#8C4A52]/5 shadow-md` : `border-gray-100 bg-gray-50 hover:bg-gray-100`}`}
-                >
-                  <div className={`w-10 h-10 rounded-full ${method.color} flex items-center justify-center font-bold text-xs`}>
-                    {method.name.charAt(0)}
-                  </div>
-                  <span className="text-xs font-bold text-[#2C2623]">{method.name}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-xs font-bold text-[#7C7267] uppercase tracking-wider mb-2">Amount to Pay</label>
-              <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">৳</span>
-                <input 
-                  type="text" 
-                  value={currentTotal}
-                  disabled
-                  className="w-full pl-10 pr-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 font-bold text-xl text-[#2C2623]"
-                />
-              </div>
-            </div>
-
-            <button 
-              onClick={handleGenerateLink}
-              disabled={isPaying}
-              className="w-full py-4 rounded-full bg-[#2C2623] text-white font-bold shadow-elevated-card hover:bg-[#1a1614] transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              {isPaying ? (
-                <span>Processing Payment...</span>
-              ) : (
-                <>
-                  <span>Confirm Payment &amp; Activate Link</span>
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* MFS Payment Gateway Modal (bKash, Nagad, Rocket) */}
+      <PaymentGatewayModal
+        isOpen={showPayModal}
+        onClose={() => setShowPayModal(false)}
+        selectedDuration={selectedDuration}
+        currentTotal={currentTotal}
+        invitation={invitation}
+      />
     </main>
   );
 }

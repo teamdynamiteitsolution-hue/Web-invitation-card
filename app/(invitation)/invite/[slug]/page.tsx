@@ -16,6 +16,27 @@ export default async function GuestInvitationPage({ params }: { params: { slug: 
   });
 
   if (!invitation) return notFound();
+
+  // If card is not yet approved by admin, display elegant pending approval screen
+  if (invitation.status !== "ACTIVE") {
+    return (
+      <main className="min-h-screen w-full bg-[#FAF8F5] text-[#2C2623] flex items-center justify-center p-6 select-none">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-[#D4AF37]/30 shadow-2xl text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 text-2xl flex items-center justify-center mx-auto border border-amber-200 shadow-xs">
+            ⏳
+          </div>
+          <h2 className="text-2xl font-bold font-serif text-[#2C2623]">
+            {invitation.status === "PENDING_PAYMENT" ? "Approval Pending" : "Invitation Inactive"}
+          </h2>
+          <p className="text-sm text-[#7C7267] font-serif italic leading-relaxed">
+            {invitation.status === "PENDING_PAYMENT"
+              ? "This invitation card's payment and Transaction ID (TrxID) are currently under review by an administrator. The card will become live as soon as the transaction is approved."
+              : "This invitation card is currently not active."}
+          </p>
+        </div>
+      </main>
+    );
+  }
   
   const canonical = resolveCanonicalInvitation(invitation);
   const { template: canonicalTemplate, animation: canonicalAnimation, eventData: canonicalEventData, isScroll, experienceType } = canonical;
