@@ -5,10 +5,10 @@ import { useEditor } from '../EditorContext';
 import { PlayCircle, CheckCircle2, Film } from 'lucide-react';
 
 export const AnimationTab = ({ animations }: { animations: any[] }) => {
-  const { selectedAnimationId, setSelectedAnimationId, eventData } = useEditor();
+  const { selectedAnimationId, setSelectedAnimationId } = useEditor();
   const [filter, setFilter] = useState<string>('all');
 
-  const filteredAnimations = animations.filter(anim => {
+  const filteredAnimations = (animations || []).filter(anim => {
     if (filter === 'all') return true;
     const name = (anim.name || '').toLowerCase();
     if (filter === 'birthday') return name.includes('birthday') || name.includes('balloon') || name.includes('party') || name.includes('fun');
@@ -49,6 +49,14 @@ export const AnimationTab = ({ animations }: { animations: any[] }) => {
 
       {/* Grid */}
       <div className="grid grid-cols-2 gap-4">
+        {filteredAnimations.length === 0 && (
+          <div className="col-span-2 py-12 text-center text-stone-400 bg-stone-50 rounded-2xl border border-dashed border-stone-200">
+            <Film className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p className="text-xs font-semibold text-[#7C7267]">No animations found in this category.</p>
+            <p className="text-[11px] text-stone-400 mt-1">Add new animations via the Admin Panel.</p>
+          </div>
+        )}
+
         {filteredAnimations.map(anim => {
           const isSelected = selectedAnimationId === anim.id;
 

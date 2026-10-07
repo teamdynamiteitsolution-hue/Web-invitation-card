@@ -5,7 +5,15 @@ import gsap from "gsap";
 import { ArrowRight, RotateCcw } from "lucide-react";
 import { DynamicLayout } from "@/app/create/components/editor/DynamicLayout";
 
-export default function TheatricalCurtain({ template, eventData, skipAnimation }: { template?: any; eventData?: any; skipAnimation?: boolean }) {
+export default function TheatricalCurtain({ 
+  template, 
+  eventData, 
+  skipAnimation 
+}: { 
+  template?: any; 
+  eventData?: any; 
+  skipAnimation?: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(skipAnimation || false);
   const leftCurtainRef = useRef<HTMLDivElement>(null);
   const rightCurtainRef = useRef<HTMLDivElement>(null);

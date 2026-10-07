@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import EditClient from "./EditClient";
 import { notFound } from "next/navigation";
-
-const prisma = new PrismaClient();
 
 export default async function EditPage({ params }: { params: { id: string } }) {
   const invitation = await prisma.invitation.findUnique({

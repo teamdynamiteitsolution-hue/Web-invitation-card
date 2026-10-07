@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-
-const prisma = new PrismaClient();
 
 export async function DELETE(req: Request) {
   try {
@@ -29,25 +27,55 @@ export async function DELETE(req: Request) {
     }
 
     const animation = await prisma.animation.findUnique({
-      where: { id },
-      include: { _count: { select: { invitations: true } } }
+      where: { id }
     });
 
     if (!animation) {
       return NextResponse.json({ error: 'Animation not found' }, { status: 404 });
     }
 
-    if (animation._count.invitations > 0) {
-      return NextResponse.json({ error: 'Cannot delete animation because it is being used by users.' }, { status: 400 });
+    // 1. Find all invitations linked to this animation
+    const invitations = await prisma.invitation.findMany({
+      where: { animationId: id },
+      select: { id: true }
+    });
+    const invitationIds = invitations.map(i => i.id);
+
+    if (invitationIds.length > 0) {
+      // Find orders linked to these invitations
+      const orders = await prisma.paymentOrder.findMany({
+        where: { invitationId: { in: invitationIds } },
+        select: { id: true }
+      });
+      const orderIds = orders.map(o => o.id);
+
+      if (orderIds.length > 0) {
+        await prisma.paymentTransaction.deleteMany({
+          where: { paymentOrderId: { in: orderIds } }
+        });
+        await prisma.paymentOrder.deleteMany({
+          where: { id: { in: orderIds } }
+        });
+      }
+
+      await prisma.invitation.deleteMany({
+        where: { id: { in: invitationIds } }
+      });
     }
 
+    // 2. Clean up animation compatibilities
+    await prisma.animationCompatibility.deleteMany({
+      where: { animationId: id }
+    });
+
+    // 3. Delete the animation
     await prisma.animation.delete({
       where: { id }
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Delete animation error:', error);
-    return NextResponse.json({ error: 'Failed to delete animation' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to delete animation' }, { status: 500 });
   }
 }

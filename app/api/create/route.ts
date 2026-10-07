@@ -25,7 +25,9 @@ export async function GET() {
       include: { category: true }
     });
     const animations = await prisma.animation.findMany();
-    const durations = await prisma.durationTier.findMany();
+    const durations = await prisma.durationTier.findMany({
+      orderBy: { days: 'asc' }
+    });
 
     return NextResponse.json({
       success: true,

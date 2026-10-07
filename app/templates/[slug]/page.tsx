@@ -1,11 +1,9 @@
 import React from "react";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { Sparkles, ArrowRight, PlayCircle, Star, Palette, Maximize, Smartphone } from "lucide-react";
+import { Sparkles, ArrowRight, Star, Palette, Maximize, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { Header } from "@/components/Header";
-
-const prisma = new PrismaClient();
 
 export default async function TemplatePreviewPage({ params }: { params: { slug: string } }) {
   const template = await prisma.template.findUnique({
@@ -84,7 +82,7 @@ export default async function TemplatePreviewPage({ params }: { params: { slug: 
                   { icon: <Palette className="w-5 h-5 text-[#D4AF37]" />, text: "Fully customizable typography & colors" },
                   { icon: <Maximize className="w-5 h-5 text-[#D4AF37]" />, text: `${template.compatibilities.length} opening experiences available` },
                   { icon: <Smartphone className="w-5 h-5 text-[#D4AF37]" />, text: "Perfect mobile & desktop optimization" },
-                  { icon: <Star className="w-5 h-5 text-[#D4AF37]" />, text: "Built-in RSVP & Guest tracking" },
+                  { icon: <Star className="w-5 h-5 text-[#D4AF37]" />, text: "Instant WhatsApp & Mobile Sharing" },
                 ].map((feature, idx) => (
                   <li key={idx} className="flex items-center gap-4 text-[#7C7267] font-serif">
                     <div className="bg-[#FAF8F5] p-2 rounded-full border border-[#D4AF37]/20">

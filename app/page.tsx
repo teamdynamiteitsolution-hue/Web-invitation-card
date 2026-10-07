@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import HomeClient from "./HomeClient";
 
-export const revalidate = 3600; // Cache for 1 hour
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const categories = await prisma.eventCategory.findMany({

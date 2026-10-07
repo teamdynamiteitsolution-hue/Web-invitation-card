@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Link2, Save, CreditCard, ArrowRight, CheckCircle2, X, Clock, ShieldCheck } from "lucide-react";
+import { Link2, Save, CreditCard, ArrowRight, CheckCircle2, X, Clock, ShieldCheck, Loader2 } from "lucide-react";
 import DynamicCardExperience from "@/experiences/dynamic-card";
 import EnvelopeRoyal from "@/experiences/envelope-royal";
 import TheatricalCurtain from "@/experiences/theatrical-curtain";
@@ -13,23 +13,48 @@ import { resolveCanonicalInvitation } from "@/lib/canonical-invitation";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import PaymentGatewayModal from "@/components/PaymentGatewayModal";
 
-const DURATION_TIERS = [
-  { days: 15, label: "15 Days", badge: "Standard", price: 0, desc: "Default link validity" },
-  { days: 20, label: "20 Days", badge: "+5 Days", price: 100, desc: "Extended celebration" },
-  { days: 30, label: "30 Days", badge: "1 Month", price: 200, desc: "Full month validity" },
-  { days: 45, label: "45 Days", badge: "Popular", price: 350, desc: "Wedding season pack" },
-  { days: 60, label: "60 Days", badge: "2 Months", price: 500, desc: "Maximum validity" },
-];
+interface DurationTierItem {
+  id?: string;
+  days: number;
+  name: string;
+  price: number;
+  isDefault?: boolean;
+}
 
-export default function CheckoutClient({ invitation, total }: { invitation: any, total: number }) {
+export default function CheckoutClient({
+  invitation,
+  total,
+  durationTiers = [],
+  initialPaymentMethods = []
+}: {
+  invitation: any;
+  total: number;
+  durationTiers?: DurationTierItem[];
+  initialPaymentMethods?: any[];
+}) {
   const router = useRouter();
-  const [selectedDuration, setSelectedDuration] = useState<number>(15);
+
+  // Fallback if DB duration tiers is empty
+  const activeTiers = durationTiers.length > 0
+    ? durationTiers
+    : [
+        { days: 15, name: "15 Days", price: 0, isDefault: true },
+        { days: 30, name: "1 Month (30 Days)", price: 500, isDefault: false },
+        { days: 45, name: "45 Days", price: 800, isDefault: false },
+        { days: 60, name: "2 Months (60 Days)", price: 1100, isDefault: false },
+        { days: 90, name: "3 Months (90 Days)", price: 1500, isDefault: false },
+      ];
+
+  const defaultDays = activeTiers.find((t) => t.isDefault)?.days || activeTiers[0]?.days || 15;
+  const [selectedDuration, setSelectedDuration] = useState<number>(defaultDays);
   const [showPayModal, setShowPayModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [isSavingLater, setIsSavingLater] = useState(false);
 
-  // Dynamic pricing calculation based on base template/animation + chosen duration
+  // Dynamic pricing calculation based on base template/animation + chosen DB duration
   const basePrice = (invitation.template?.price || 0) + (invitation.animation?.price || 0);
-  const durationPrice = DURATION_TIERS.find(t => t.days === selectedDuration)?.price || 0;
+  const currentTier = activeTiers.find((t) => t.days === selectedDuration) || activeTiers[0];
+  const durationPrice = currentTier?.price || 0;
   const currentTotal = basePrice + durationPrice;
 
   // Canonical resolution of customized invitation
@@ -37,10 +62,11 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
   const { template: canonicalTemplate, animation: canonicalAnimation, isScroll, experienceType, eventData: canonicalEventData } = canonical;
 
   const handleSaveLater = () => {
+    setIsSavingLater(true);
     setShowSaveModal(true);
     setTimeout(() => {
       router.push("/profile");
-    }, 2500);
+    }, 2000);
   };
 
   // Resolve preview component based on template experience type
@@ -90,28 +116,30 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
             Select Card Active Duration (লিংক সক্রিয় রাখার মেয়াদ)
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            {DURATION_TIERS.map((tier) => {
+            {activeTiers.map((tier) => {
               const isSelected = selectedDuration === tier.days;
               return (
                 <button
                   key={tier.days}
                   type="button"
                   onClick={() => setSelectedDuration(tier.days)}
-                  className={`p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between ${isSelected
+                  className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${isSelected
                       ? 'border-[#8C4A52] bg-[#8C4A52]/5 ring-2 ring-[#8C4A52]/20 shadow-sm'
                       : 'border-[#D4AF37]/30 bg-white hover:border-[#8C4A52]/40 hover:bg-stone-50'
                     }`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className={`text-xs font-bold ${isSelected ? 'text-[#8C4A52]' : 'text-[#2C2623]'}`}>
-                      {tier.label}
+                      {tier.name || `${tier.days} Days`}
                     </span>
                     <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${tier.price === 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
                       }`}>
-                      {tier.price === 0 ? 'Free' : `+৳${tier.price}`}
+                      {tier.price === 0 ? 'Included' : `+৳${tier.price}`}
                     </span>
                   </div>
-                  <p className="text-[10px] text-[#7C7267] leading-tight">{tier.desc}</p>
+                  <p className="text-[10px] text-[#7C7267] leading-tight">
+                    {tier.price === 0 ? 'Default validity' : `${tier.days} days active link`}
+                  </p>
                 </button>
               );
             })}
@@ -138,19 +166,31 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
 
         <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
           <button
+            type="button"
             onClick={() => setShowPayModal(true)}
-            className="flex-1 py-4 px-6 rounded-full bg-[#8C4A52] text-white font-bold shadow-elevated-card hover:bg-[#7a3e45] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
+            className="flex-1 py-4 px-6 rounded-full bg-[#8C4A52] text-white font-bold shadow-elevated-card hover:bg-[#7a3e45] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer"
           >
             <CreditCard className="w-5 h-5" />
-            Pay &amp; Generate Link
+            <span>Pay &amp; Generate Link</span>
           </button>
 
           <button
+            type="button"
             onClick={handleSaveLater}
-            className="flex-1 py-4 px-6 rounded-full bg-white text-[#2C2623] border border-[#D4AF37]/40 font-bold shadow-soft-surface hover:bg-[#F9F0EC] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
+            disabled={isSavingLater}
+            className="flex-1 py-4 px-6 rounded-full bg-white text-[#2C2623] border border-[#D4AF37]/40 font-bold shadow-soft-surface hover:bg-[#F9F0EC] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer disabled:opacity-60"
           >
-            <Save className="w-5 h-5 text-[#D4AF37]" />
-            Pay Later &amp; Save
+            {isSavingLater ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin text-[#8C4A52]" />
+                <span>Saving to Profile...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5 text-[#D4AF37]" />
+                <span>Pay Later &amp; Save</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -166,7 +206,10 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
             <p className="text-[#7C7267] font-serif italic mb-6">
               Your card has been saved to your profile&apos;s Saved Cards option.
             </p>
-            <p className="text-sm font-bold text-gray-400">Redirecting to profile...</p>
+            <p className="text-sm font-bold text-gray-400 flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-[#8C4A52]" />
+              <span>Redirecting to profile...</span>
+            </p>
           </div>
         </div>
       )}
@@ -178,6 +221,7 @@ export default function CheckoutClient({ invitation, total }: { invitation: any,
         selectedDuration={selectedDuration}
         currentTotal={currentTotal}
         invitation={invitation}
+        initialMethods={initialPaymentMethods}
       />
     </main>
   );

@@ -80,12 +80,28 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    await prisma.invitation.delete({
-      where: { id: params.id }
+    // Cascade delete any transactions & payment orders for this invitation
+    const orders = await prisma.paymentOrder.findMany({
+      where: { invitationId: params.id },
+      select: { id: true },
     });
+    const orderIds = orders.map((o) => o.id);
+
+    await prisma.$transaction([
+      prisma.paymentTransaction.deleteMany({
+        where: { paymentOrderId: { in: orderIds } },
+      }),
+      prisma.paymentOrder.deleteMany({
+        where: { invitationId: params.id },
+      }),
+      prisma.invitation.delete({
+        where: { id: params.id },
+      }),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("User invitation delete error:", error);
     return NextResponse.json({ error: "Failed to delete invitation" }, { status: 500 });
   }
 }

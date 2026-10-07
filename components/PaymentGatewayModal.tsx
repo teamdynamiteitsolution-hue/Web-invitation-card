@@ -11,6 +11,7 @@ interface PaymentGatewayModalProps {
   selectedDuration: number;
   currentTotal: number;
   invitation: any;
+  initialMethods?: PaymentMethodConfigData[];
 }
 
 export default function PaymentGatewayModal({
@@ -19,10 +20,16 @@ export default function PaymentGatewayModal({
   selectedDuration,
   currentTotal,
   invitation,
+  initialMethods = [],
 }: PaymentGatewayModalProps) {
   const router = useRouter();
-  const [methods, setMethods] = useState<PaymentMethodConfigData[]>(DEFAULT_PAYMENT_METHODS);
-  const [selectedMethodId, setSelectedMethodId] = useState<"bkash" | "nagad" | "rocket">("bkash");
+  const [methods, setMethods] = useState<PaymentMethodConfigData[]>(() => {
+    return initialMethods.length > 0 ? initialMethods : DEFAULT_PAYMENT_METHODS;
+  });
+  const [selectedMethodId, setSelectedMethodId] = useState<"bkash" | "nagad" | "rocket">(() => {
+    const active = (initialMethods.length > 0 ? initialMethods : DEFAULT_PAYMENT_METHODS).filter(m => m.isActive !== false);
+    return (active[0]?.methodId || "bkash") as "bkash" | "nagad" | "rocket";
+  });
   const [senderWallet, setSenderWallet] = useState("");
   const [paymentTrxId, setPaymentTrxId] = useState("");
   const [copied, setCopied] = useState(false);
@@ -37,11 +44,11 @@ export default function PaymentGatewayModal({
     fetch("/api/payments/methods")
       .then((res) => res.json())
       .then((data) => {
-        if (data && data.success && Array.isArray(data.methods)) {
+        if (data && data.success && Array.isArray(data.methods) && data.methods.length > 0) {
           setMethods(data.methods);
-          const firstActive = data.methods.find((m: PaymentMethodConfigData) => m.isActive);
-          if (firstActive) {
-            setSelectedMethodId(firstActive.methodId);
+          const active = data.methods.filter((m: PaymentMethodConfigData) => m.isActive !== false);
+          if (active.length > 0 && !active.some((m: PaymentMethodConfigData) => m.methodId === selectedMethodId)) {
+            setSelectedMethodId(active[0].methodId);
           }
         }
       })
@@ -52,10 +59,11 @@ export default function PaymentGatewayModal({
 
   if (!isOpen) return null;
 
-  const activeMethods = methods.filter((m) => m.isActive);
+  const activeMethods = methods.filter((m) => m.isActive !== false);
   const activeMethod =
     activeMethods.find((m) => m.methodId === selectedMethodId) ||
     activeMethods[0] ||
+    methods[0] ||
     DEFAULT_PAYMENT_METHODS[0];
 
   // Resolve account details and instructions according to the admin-configured account type
@@ -219,7 +227,7 @@ export default function PaymentGatewayModal({
             <label className="block text-xs font-bold text-[#7C7267] uppercase tracking-wider mb-2.5">
               Choose Payment Gateway
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className={`grid gap-3 ${activeMethods.length === 1 ? 'grid-cols-1' : activeMethods.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
               {activeMethods.map((method) => {
                 const isSelected = selectedMethodId === method.methodId;
                 const meta = getBrandMeta(method.methodId);

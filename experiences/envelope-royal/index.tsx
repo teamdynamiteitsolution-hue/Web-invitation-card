@@ -7,7 +7,17 @@ import { Sparkles, Heart, MapPin, Calendar, Volume2, VolumeX, RotateCcw } from "
 import { getPresetStyle } from "@/lib/typography-presets";
 import { DynamicLayout } from "@/app/create/components/editor/DynamicLayout";
 
-export default function EnvelopeRoyal({ template, eventData, animation, skipAnimation }: { template?: any; eventData?: any; animation?: any; skipAnimation?: boolean }) {
+export default function EnvelopeRoyal({ 
+  template, 
+  eventData, 
+  animation, 
+  skipAnimation 
+}: { 
+  template?: any; 
+  eventData?: any; 
+  animation?: any; 
+  skipAnimation?: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(skipAnimation || false);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   

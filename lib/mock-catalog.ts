@@ -424,7 +424,9 @@ export const MOCK_BACKGROUNDS: BackgroundDTO[] = [
 ];
 
 export const MOCK_DURATION_TIERS: DurationTierDTO[] = [
-  { id: "dur_15", days: 15, name: "15 Days (Standard)", price: 0.0, isDefault: true },
-  { id: "dur_30", days: 30, name: "30 Days (Extended)", price: 30.0, isDefault: false },
-  { id: "dur_60", days: 60, name: "60 Days (VIP Season)", price: 60.0, isDefault: false },
+  { id: "dur_15", days: 15, name: "15 Days", price: 0.0, isDefault: true },
+  { id: "dur_30", days: 30, name: "1 Month", price: 500.0, isDefault: false },
+  { id: "dur_45", days: 45, name: "45 Days", price: 800.0, isDefault: false },
+  { id: "dur_60", days: 60, name: "2 Months", price: 1100.0, isDefault: false },
+  { id: "dur_90", days: 90, name: "3 Months", price: 1500.0, isDefault: false },
 ];

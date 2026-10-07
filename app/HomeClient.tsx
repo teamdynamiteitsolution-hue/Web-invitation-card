@@ -95,7 +95,7 @@ export default function HomeClient({ categories, templates, animations }: { cate
                     </div>
 
                     <button className="w-full py-4 rounded-full bg-[#8C4A52] text-white font-bold shadow-elevated-card mt-4">
-                      RSVP Now
+                      Open Invitation
                     </button>
                   </div>
                 </div>
@@ -108,7 +108,7 @@ export default function HomeClient({ categories, templates, animations }: { cate
                 <span className="text-xl">✅</span>
               </div>
               <div>
-                <div className="text-sm font-bold text-[#2C2623]">RSVP Confirmed</div>
+                <div className="text-sm font-bold text-[#2C2623]">Invitation Shared</div>
                 <div className="text-xs text-[#7C7267]">Just now</div>
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function HomeClient({ categories, templates, animations }: { cate
       <section className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
         {[
           { title: "No App Required", desc: "Guests view instantly on any device via a simple web link.", icon: "🌐" },
-          { title: "Instant RSVP", desc: "Track attendees easily with built-in response forms.", icon: "📋" },
+          { title: "Instant Sharing", desc: "Share effortlessly with all guests via WhatsApp, Messenger or Email.", icon: "💌" },
           { title: "Culturally Crafted", desc: "Designs honoring South Asian aesthetics and traditions.", icon: "✨" }
         ].map((feature, i) => (
           <div key={i} className="p-8 rounded-[32px] bg-white shadow-soft-surface border border-[#D4AF37]/10 flex flex-col items-center text-center group hover:-translate-y-2 transition-transform duration-300">
@@ -290,7 +290,7 @@ export default function HomeClient({ categories, templates, animations }: { cate
             
             {[
               { step: "01", title: "Select a Template", desc: "Browse our premium curated collections and pick a design that matches your aesthetic." },
-              { step: "02", title: "Customize Details", desc: "Easily input your names, dates, venues, and custom RSVP details." },
+              { step: "02", title: "Customize Details", desc: "Easily input your names, dates, venues, and custom ceremony details." },
               { step: "03", title: "Share Instantly", desc: "Get a live digital link to share with your guests via WhatsApp or Email." }
             ].map((item, i) => (
               <div key={i} className="flex flex-col items-center text-center">
@@ -333,7 +333,7 @@ export default function HomeClient({ categories, templates, animations }: { cate
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-3xl relative">
               <div className="text-[#D4AF37] text-6xl font-serif absolute top-4 left-6 opacity-30">"</div>
               <p className="text-gray-300 font-serif italic text-lg leading-relaxed mb-6 relative z-10 pt-4">
-                "The 'Drag to Transform' feature was so cool. The support team was amazing, and we got our RSVP list organized instantly. Highly recommended!"
+                "The 'Drag to Transform' feature was so cool. The support team was amazing, and all our guests loved the digital experience. Highly recommended!"
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-[#D4AF37] flex items-center justify-center text-[#1A1614] font-bold">S&M</div>

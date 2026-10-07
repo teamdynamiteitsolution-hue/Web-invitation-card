@@ -303,7 +303,10 @@ export default function ScrollExperience({
                 </div>
               )}
               <button
-                onClick={(e) => { e.stopPropagation(); setIsRevealed(true); }}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setIsRevealed(true); 
+                }}
                 className="absolute top-4 right-4 z-20 text-[11px] text-white/70 hover:text-white bg-black/40 px-3 py-1 rounded-full backdrop-blur-xs border border-white/10"
               >
                 Skip

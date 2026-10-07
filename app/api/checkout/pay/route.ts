@@ -69,14 +69,12 @@ export async function POST(req: Request) {
     }
 
     const durationDays = Number(rawDurationDays) || 15;
-    const durationPricing: Record<number, number> = {
-      15: 0,
-      20: 100,
-      30: 200,
-      45: 350,
-      60: 500,
-    };
-    const durationPrice = durationPricing[durationDays] ?? 0;
+    const durationTier = await prisma.durationTier.findFirst({
+      where: { days: durationDays, isActive: true },
+    }) || await prisma.durationTier.findFirst({
+      where: { days: durationDays },
+    });
+    const durationPrice = durationTier?.price ?? 0;
 
     // Calculate total price
     const templatePrice = invitation.template?.price || 0;

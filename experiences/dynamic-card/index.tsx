@@ -25,7 +25,15 @@ const INITIAL_BALLOONS: BalloonItem[] = [
   { id: 5, color: "#F59E0B", gradient: "from-yellow-300 via-amber-400 to-orange-500", glow: "rgba(245,158,11,0.4)", size: 76, x: 72, y: 58, delay: 0.3, label: "💖" },
 ];
 
-export default function DynamicCardExperience({ template, animation, eventData, revealMode, customImage, bgBlur, skipAnimation }: any) {
+export default function DynamicCardExperience({ 
+  template, 
+  animation, 
+  eventData, 
+  revealMode, 
+  customImage, 
+  bgBlur, 
+  skipAnimation
+}: any) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVideoFinished, setIsVideoFinished] = useState(skipAnimation || !animation?.videoUrl);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -97,7 +105,7 @@ export default function DynamicCardExperience({ template, animation, eventData, 
     !isInteractiveMode;
 
   useEffect(() => {
-    setIsVideoFinished(skipAnimation || !videoUrl);
+    setIsVideoFinished(Boolean(skipAnimation || !videoUrl));
     setIsPlaying(false);
   }, [videoUrl, skipAnimation]);
 
@@ -332,6 +340,18 @@ export default function DynamicCardExperience({ template, animation, eventData, 
               </div>
             </div>
           )}
+          
+          {/* Skip Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleVideoEnded();
+            }}
+            className="absolute top-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white/90 text-xs font-serif font-semibold border border-white/20 transition-all flex items-center gap-1 shadow-lg"
+          >
+            <span>Skip Opening</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 

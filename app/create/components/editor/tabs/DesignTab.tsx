@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { useEditor } from '../EditorContext';
-import { LayoutTemplate, CheckCircle2, Scroll, Crown, Leaf, Cake, Sparkles, Briefcase } from 'lucide-react';
-import { TEMPLATE_DEFINITIONS, getTemplateById } from '@/lib/template-definitions';
+import { LayoutTemplate, CheckCircle2, Scroll, Sparkles } from 'lucide-react';
 
 export const DesignTab = ({ templates }: { templates: any[] }) => {
   const { selectedTemplateId, setSelectedTemplateId, setLayoutPresetId, updateEventData } = useEditor();
@@ -29,7 +28,7 @@ export const DesignTab = ({ templates }: { templates: any[] }) => {
         category: t.category?.slug || t.category?.name?.toLowerCase() || 'wedding',
         experienceType: isScroll ? 'SCROLL' : (t.experienceType || 'dynamic_card'),
         compositionId: manifest.photoFrameStyle || t.archetype || 'classic_editorial',
-        previewImageUrl: t.previewImageUrl || '/assets/Cards/card 1.png',
+        previewImageUrl: t.previewImageUrl || '',
       };
     });
   }, [templates]);
@@ -141,6 +140,14 @@ export const DesignTab = ({ templates }: { templates: any[] }) => {
 
       {/* Templates Grid */}
       <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
+        {filteredTemplates.length === 0 && (
+          <div className="col-span-2 py-12 text-center text-stone-400 bg-stone-50 rounded-2xl border border-dashed border-stone-200">
+            <LayoutTemplate className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p className="text-xs font-semibold text-[#7C7267]">No templates found in this category.</p>
+            <p className="text-[11px] text-stone-400 mt-1">Add new templates via the Admin Panel.</p>
+          </div>
+        )}
+
         {filteredTemplates.map(tmpl => {
           const isScroll = isScrollType(tmpl.experienceType);
           const isSelected = selectedTemplateId === tmpl.id;

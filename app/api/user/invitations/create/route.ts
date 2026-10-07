@@ -34,9 +34,19 @@ export async function POST(req: Request) {
     }
 
     // Default background fallback
-    const background = await prisma.background.findFirst();
+    let background = await prisma.background.findFirst();
     if (!background) {
-      return NextResponse.json({ error: "No backgrounds available" }, { status: 500 });
+      background = await prisma.background.create({
+        data: {
+          name: "Default Fiber",
+          previewUrl: "/assets/textures/handmade-fiber.webp",
+          assetUrl: "/assets/textures/handmade-fiber.webp",
+          theme: "royal_crimson",
+          price: 0,
+          isPremium: false,
+          isActive: true
+        }
+      });
     }
 
     const expiresAt = new Date();

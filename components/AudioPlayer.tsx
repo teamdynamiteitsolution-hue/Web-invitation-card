@@ -39,34 +39,33 @@ export function AudioPlayer({ music, triggerPlay }: AudioPlayerProps) {
       });
   }, [isEnabled, isMuted, volume]);
 
-  // Autoplay on first touch/interaction
+  // Autoplay on first touch/interaction or triggerPlay
   useEffect(() => {
-    if (!isEnabled || hasInteracted) return;
+    if (!isEnabled) return;
 
-    const handleFirstGesture = () => {
-      startAudio();
-      window.removeEventListener("click", handleFirstGesture);
-      window.removeEventListener("touchstart", handleFirstGesture);
-      window.removeEventListener("scroll", handleFirstGesture);
-    };
-
-    window.addEventListener("click", handleFirstGesture, { passive: true });
-    window.addEventListener("touchstart", handleFirstGesture, { passive: true });
-    window.addEventListener("scroll", handleFirstGesture, { passive: true });
-
-    return () => {
-      window.removeEventListener("click", handleFirstGesture);
-      window.removeEventListener("touchstart", handleFirstGesture);
-      window.removeEventListener("scroll", handleFirstGesture);
-    };
-  }, [isEnabled, hasInteracted, startAudio]);
-
-  // Trigger from opening animation
-  useEffect(() => {
-    if (triggerPlay && isEnabled && !isPlaying) {
+    if (triggerPlay && !isPlaying) {
       startAudio();
     }
-  }, [triggerPlay, isEnabled, isPlaying, startAudio]);
+
+    if (!hasInteracted) {
+      const handleFirstGesture = () => {
+        startAudio();
+        window.removeEventListener("click", handleFirstGesture);
+        window.removeEventListener("touchstart", handleFirstGesture);
+        window.removeEventListener("scroll", handleFirstGesture);
+      };
+
+      window.addEventListener("click", handleFirstGesture, { passive: true });
+      window.addEventListener("touchstart", handleFirstGesture, { passive: true });
+      window.addEventListener("scroll", handleFirstGesture, { passive: true });
+
+      return () => {
+        window.removeEventListener("click", handleFirstGesture);
+        window.removeEventListener("touchstart", handleFirstGesture);
+        window.removeEventListener("scroll", handleFirstGesture);
+      };
+    }
+  }, [isEnabled, triggerPlay, hasInteracted, isPlaying, startAudio]);
 
   if (!isEnabled || !musicUrl) return null;
 

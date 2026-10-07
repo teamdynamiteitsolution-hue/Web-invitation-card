@@ -35,6 +35,7 @@ async function main() {
     { days: 15, name: '15 Days', price: 0, isDefault: true },
     { days: 30, name: '1 Month', price: 500, isDefault: false },
     { days: 45, name: '45 Days', price: 800, isDefault: false },
+    { days: 60, name: '2 Months', price: 1100, isDefault: false },
     { days: 90, name: '3 Months', price: 1500, isDefault: false },
   ];
 

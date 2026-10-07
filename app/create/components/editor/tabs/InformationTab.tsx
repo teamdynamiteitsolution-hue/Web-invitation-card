@@ -439,21 +439,21 @@ export const InformationTab = ({ dbData }: { dbData?: any }) => {
         <div className="pt-4 border-t border-gray-100">
           <div className="flex items-center justify-between mb-3">
             <label className="block text-xs font-bold text-[#2C2623] uppercase tracking-wide">
-              Required Images ({imageSlots.length})
+              Photos &amp; Media ({imageSlots.length})
             </label>
             <span className="text-[10px] text-[#8C4A52] font-bold">
-              {imageSlots.length === 0 ? 'No images required' : `${imageSlots.length} image slots defined`}
+              {imageSlots.length === 0 ? 'No image slots' : `${imageSlots.length} image slots available`}
             </span>
           </div>
 
           {imageSlots.length === 0 ? (
             <div className="p-4 rounded-xl bg-gray-50 border border-dashed border-gray-200 text-xs text-[#7C7267] text-center italic">
-              This typography-first design does not require any image uploads.
+              This template layout does not have extra image slots.
             </div>
           ) : (
             <div className="space-y-4">
               {imageSlots.map((slot: any) => {
-                const currentVal = eventData[slot.id];
+                const currentVal = eventData[slot.id] || "/assets/categories/wedding.webp";
                 const hasCustomImg = currentVal && !currentVal.includes('/assets/Cards/') && !currentVal.includes('/assets/categories/');
 
                 return (
@@ -480,11 +480,6 @@ export const InformationTab = ({ dbData }: { dbData?: any }) => {
                       <div>
                         <h4 className="font-bold text-xs text-[#2C2623]">{slot.label}</h4>
                         <p className="text-[10px] text-[#7C7267] leading-tight mt-0.5">{slot.description || 'Slot asset'}</p>
-                        {slot.required && (
-                          <span className="inline-block mt-1 text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
-                            Required
-                          </span>
-                        )}
                       </div>
                     </div>
 

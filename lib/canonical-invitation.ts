@@ -20,7 +20,15 @@ export interface CanonicalInvitationResult {
 export function resolveCanonicalInvitation(rawInput: any): CanonicalInvitationResult {
   if (!rawInput) {
     return {
-      template: TEMPLATE_DEFINITIONS[0],
+      template: {
+        id: "default_tmpl",
+        slug: "classic-editorial",
+        name: "Royal Digital Invitation",
+        experienceType: "dynamic_card",
+        compositionId: "classic_editorial",
+        previewImageUrl: "",
+        assetManifest: { cardAsset: "", decorations: [] }
+      },
       animation: null,
       eventData: {},
       typographyStyles: {},
@@ -57,7 +65,6 @@ export function resolveCanonicalInvitation(rawInput: any): CanonicalInvitationRe
     rawInput.templateId;
 
   const matchedDef = getTemplateById(templateSlugOrId) ||
-    TEMPLATE_DEFINITIONS.find(t => t.slug === templateSlugOrId || t.id === templateSlugOrId) ||
     (rawTemplate.slug ? getTemplateById(rawTemplate.slug) : null);
 
   // 3. Parse assetManifest safely
@@ -78,7 +85,7 @@ export function resolveCanonicalInvitation(rawInput: any): CanonicalInvitationRe
   const resolvedCardAsset =
     (assetManifest?.cardAsset && assetManifest.cardAsset !== "" && !assetManifest.cardAsset.includes("placeholder"))
       ? assetManifest.cardAsset
-      : (matchedDef?.previewImageUrl || rawTemplate.previewImageUrl || "/assets/Cards/card 1.png");
+      : (matchedDef?.previewImageUrl || rawTemplate.previewImageUrl || "");
 
   const resolvedCompositionId =
     eventData.layoutPresetId ||
@@ -111,7 +118,7 @@ export function resolveCanonicalInvitation(rawInput: any): CanonicalInvitationRe
     ...(matchedDef || {}),
     id: rawTemplate.id || matchedDef?.id || "default_tmpl",
     slug: matchedDef?.slug || rawTemplate.slug || "classic-editorial",
-    name: matchedDef?.name || rawTemplate.name || "Royal Wedding Invitation",
+    name: matchedDef?.name || rawTemplate.name || "Royal Digital Invitation",
     experienceType: isScroll ? "SCROLL" : (rawTemplate.experienceType || matchedDef?.experienceType || "dynamic_card"),
     compositionId: resolvedCompositionId,
     previewImageUrl: matchedDef?.previewImageUrl || rawTemplate.previewImageUrl || resolvedCardAsset,

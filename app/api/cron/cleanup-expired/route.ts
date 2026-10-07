@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +27,10 @@ export async function GET(req: Request) {
           if (parsed.couplePhoto?.startsWith("data:")) parsed.couplePhoto = "/assets/categories/wedding.webp";
           if (parsed.bridePhoto?.startsWith("data:")) parsed.bridePhoto = "/assets/categories/wedding.webp";
           if (parsed.groomPhoto?.startsWith("data:")) parsed.groomPhoto = "/assets/categories/wedding.webp";
-          if (parsed.gallery1?.startsWith("data:")) parsed.gallery1 = "/assets/Cards/card 1.png";
-          if (parsed.gallery2?.startsWith("data:")) parsed.gallery2 = "/assets/Cards/card 2.png";
-          if (parsed.gallery3?.startsWith("data:")) parsed.gallery3 = "/assets/Cards/card 3.png";
-          if (parsed.gallery4?.startsWith("data:")) parsed.gallery4 = "/assets/Cards/card 4.png";
+          if (parsed.gallery1?.startsWith("data:")) parsed.gallery1 = "/assets/categories/wedding.webp";
+          if (parsed.gallery2?.startsWith("data:")) parsed.gallery2 = "/assets/categories/wedding.webp";
+          if (parsed.gallery3?.startsWith("data:")) parsed.gallery3 = "/assets/categories/wedding.webp";
+          if (parsed.gallery4?.startsWith("data:")) parsed.gallery4 = "/assets/categories/wedding.webp";
           cleanedEventData = JSON.stringify(parsed);
         }
       } catch (e) {}

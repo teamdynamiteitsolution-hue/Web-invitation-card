@@ -30,6 +30,8 @@ export default function UserDashboard() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -686,35 +688,60 @@ export default function UserDashboard() {
                                 )}
                               </button>
                             ) : (
-                              <Link href={`/checkout/${inv.slug}`} className="w-full px-4 py-3 bg-[#8C4A52] text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#7a3e45] transition-colors shadow-elevated-card">
-                                <CreditCard className="w-4 h-4" /> Pay Now
-                              </Link>
+                              <button
+                                onClick={() => {
+                                  setNavigatingId(`pay-${inv.id}`);
+                                  router.push(`/checkout/${inv.slug}`);
+                                }}
+                                disabled={navigatingId === `pay-${inv.id}`}
+                                className="w-full px-4 py-3 bg-[#8C4A52] text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#7a3e45] transition-colors shadow-elevated-card disabled:opacity-50"
+                              >
+                                {navigatingId === `pay-${inv.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                                <span>{navigatingId === `pay-${inv.id}` ? "Opening Checkout..." : "Pay Now"}</span>
+                              </button>
                             )}
                             
                             <div className="flex items-center justify-between gap-2">
-                              <Link href={`/edit/${inv.id}`} className="flex-1 px-4 py-2 bg-[#F9F0EC] text-[#8C4A52] rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#eed9d5] transition-colors">
-                                <Edit3 className="w-4 h-4" /> {inv.status === 'ACTIVE' ? 'Edit (Restricted)' : 'Edit'}
-                              </Link>
+                              <button
+                                onClick={() => {
+                                  setNavigatingId(`edit-${inv.id}`);
+                                  router.push(`/edit/${inv.id}`);
+                                }}
+                                disabled={navigatingId === `edit-${inv.id}`}
+                                className="flex-1 px-4 py-2 bg-[#F9F0EC] text-[#8C4A52] rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#eed9d5] transition-colors disabled:opacity-50"
+                              >
+                                {navigatingId === `edit-${inv.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit3 className="w-4 h-4" />}
+                                <span>{inv.status === 'ACTIVE' ? 'Edit (Restricted)' : 'Edit'}</span>
+                              </button>
                               <button onClick={() => setPreviewingCardId(inv.id)} className="p-2 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-colors" aria-label="Preview inline">
                                 <Eye className="w-5 h-5" />
                               </button>
                               <button 
+                                disabled={deletingId === inv.id}
                                 onClick={async () => {
                                   const msg = inv.status === 'ACTIVE' 
                                     ? "You have already paid for this invitation. Are you absolutely sure you want to delete it?"
                                     : "Are you sure you want to delete this invitation?";
                                   if (confirm(msg)) {
-                                    const res = await fetch(`/api/user/invitations/${inv.id}`, { method: 'DELETE' });
-                                    if (res.ok) {
-                                      setInvitations(prev => prev.filter(i => i.id !== inv.id));
-                                    } else {
-                                      alert("Failed to delete invitation");
+                                    setDeletingId(inv.id);
+                                    try {
+                                      const res = await fetch(`/api/user/invitations/${inv.id}`, { method: 'DELETE' });
+                                      if (res.ok) {
+                                        setInvitations(prev => prev.filter(i => i.id !== inv.id));
+                                      } else {
+                                        alert("Failed to delete invitation");
+                                      }
+                                    } catch (e) {
+                                      alert("Error deleting invitation");
+                                    } finally {
+                                      setDeletingId(null);
                                     }
                                   }
                                 }}
-                                className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors disabled:opacity-50"
+                                aria-label="Delete card"
                               >
-                                <Trash2 className="w-5 h-5" />
+                                {deletingId === inv.id ? <Loader2 className="w-5 h-5 animate-spin text-red-600" /> : <Trash2 className="w-5 h-5" />}
                               </button>
                             </div>
                           </div>

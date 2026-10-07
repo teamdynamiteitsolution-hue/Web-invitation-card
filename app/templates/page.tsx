@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function TemplatesPage({ searchParams }: { searchParams: { category?: string } }) {
   const currentCategorySlug = searchParams.category;

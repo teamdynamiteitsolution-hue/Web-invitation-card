@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 import { LivePreview } from './LivePreview';
 import { useEditor } from './EditorContext';
 import { Loader2, ChevronLeft, ChevronRight, SlidersHorizontal, Eye } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEditorAssets } from '@/hooks/useEditorAssets';
 import { resolveCanonicalInvitation } from '@/lib/canonical-invitation';
 import { getTemplateById } from '@/lib/template-definitions';
@@ -16,6 +16,9 @@ export const EditorLayout = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const templateParam = searchParams.get('template') || searchParams.get('templateId');
+  const animationParam = searchParams.get('animation') || searchParams.get('animationId');
   const { setSelectedTemplateId, setSelectedAnimationId, selectedTemplateId, selectedAnimationId, eventData, typographyStyles, layoutPresetId } = useEditor();
 
   useEffect(() => {
@@ -25,17 +28,32 @@ export const EditorLayout = () => {
     }
   }, []);
 
-  // Set default initial template & animation once on load
+  // Set initial template & animation from URL or DB defaults
   useEffect(() => {
     if (dbData) {
-      if (dbData.templates?.length > 0 && !selectedTemplateId) {
+      if (templateParam) {
+        const match = dbData.templates?.find((t: any) => t.slug === templateParam || t.id === templateParam);
+        if (match) {
+          setSelectedTemplateId(match.id);
+        } else if (dbData.templates?.length > 0 && !selectedTemplateId) {
+          setSelectedTemplateId(dbData.templates[0].id);
+        }
+      } else if (dbData.templates?.length > 0 && !selectedTemplateId) {
         setSelectedTemplateId(dbData.templates[0].id);
       }
-      if (dbData.animations?.length > 0 && !selectedAnimationId) {
+
+      if (animationParam) {
+        const matchAnim = dbData.animations?.find((a: any) => a.slug === animationParam || a.id === animationParam || a.pluginKey === animationParam);
+        if (matchAnim) {
+          setSelectedAnimationId(matchAnim.id);
+        } else if (dbData.animations?.length > 0 && !selectedAnimationId) {
+          setSelectedAnimationId(dbData.animations[0].id);
+        }
+      } else if (dbData.animations?.length > 0 && !selectedAnimationId) {
         setSelectedAnimationId(dbData.animations[0].id);
       }
     }
-  }, [dbData, selectedTemplateId, selectedAnimationId, setSelectedTemplateId, setSelectedAnimationId]);
+  }, [dbData, templateParam, animationParam, selectedTemplateId, selectedAnimationId, setSelectedTemplateId, setSelectedAnimationId]);
 
   if (loading || !dbData) {
     return (

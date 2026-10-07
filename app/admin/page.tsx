@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Shield, Users, Tag, Loader2, Save, LayoutTemplate, PlayCircle, Scroll, Clock, Edit3, CheckCircle2, LogOut, MessageSquare, ChevronDown, ChevronUp, Plus, Trash2, X, Music, Volume2, VolumeX, Sparkles, CreditCard, Smartphone, Check, AlertCircle, ExternalLink, RefreshCw, Copy } from "lucide-react";
 import Link from "next/link";
-import { TEMPLATE_DEFINITIONS } from "@/lib/template-definitions";
+import { Shield, Users, Tag, Loader2, Save, LayoutTemplate, PlayCircle, Scroll, Clock, Edit3, CheckCircle2, LogOut, MessageSquare, ChevronDown, ChevronUp, Plus, Trash2, X, Music, Volume2, VolumeX, Sparkles, CreditCard, Smartphone, Check, AlertCircle, ExternalLink, RefreshCw, Copy } from "lucide-react";
 
 type Tab = "cards" | "animations" | "scroll_views" | "durations" | "users" | "messages" | "payments";
 
@@ -379,19 +378,10 @@ export default function AdminDashboard() {
     : data.templates.filter((t: any) => t.category?.id === activeCategory)
   ).filter((t: any) => (t.experienceType || '').toLowerCase() !== 'scroll' && (t.experienceType || '').toLowerCase() !== 'scroll_story');
 
-  // Scroll View templates merging TEMPLATE_DEFINITIONS with database prices
-  const scrollDefs = TEMPLATE_DEFINITIONS.filter(def => (def.experienceType || '').toLowerCase() === 'scroll' || (def.experienceType || '').toLowerCase() === 'scroll_story');
-  const scrollTemplates = scrollDefs.map(def => {
-    const match = (data.templates || []).find((t: any) => t.slug === def.slug || t.id === def.id);
-    return {
-      ...def,
-      id: match?.id || def.slug,
-      slug: def.slug,
-      name: match?.name || def.name,
-      price: match?.price !== undefined ? match.price : (def as any).price ?? 2000,
-      category: def.category || (match?.category?.slug || 'wedding'),
-      previewImageUrl: def.previewImageUrl
-    };
+  // Scroll View templates strictly sourced from database (ensuring deleted cards stay deleted)
+  const scrollTemplates = (data.templates || []).filter((t: any) => {
+    const exp = (t.experienceType || '').toLowerCase();
+    return exp === 'scroll' || exp === 'scroll_story';
   });
 
   const renderScrollAdminThumbnail = (slug: string) => {
@@ -890,7 +880,7 @@ export default function AdminDashboard() {
                       <div>
                         <h4 className="font-bold text-base leading-tight mb-1">{t.name}</h4>
                         <span className="text-[10px] font-bold text-[#8C4A52] uppercase bg-[#F9F0EC] px-2 py-0.5 rounded-md border border-[#D4AF37]/20 inline-block">
-                          {t.category}
+                          {typeof t.category === 'object' ? (t.category?.name || t.category?.slug || 'Wedding') : (t.category || 'Wedding')}
                         </span>
                       </div>
                     </div>
@@ -920,11 +910,45 @@ export default function AdminDashboard() {
                       </div>
                     ) : (
                       <div className="mt-auto flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              let music = null;
+                              try {
+                                const parsed = JSON.parse(t.assetManifest || "{}");
+                                music = parsed?.music;
+                              } catch { }
+                              setCardModal({
+                                isOpen: true,
+                                isEditing: true,
+                                id: t.id,
+                                name: t.name,
+                                categoryId: t.category?.id || data.categories[0]?.id || "",
+                                price: t.price.toString(),
+                                previewImageUrl: t.previewImageUrl,
+                                experienceType: t.experienceType || "SCROLL",
+                                revealMode: "sequential",
+                                photoFrameStyle: t.archetype || "classic_editorial",
+                                music: music || null
+                              });
+                            }}
+                            className="flex-1 py-2 rounded-xl bg-[#8C4A52] text-white font-bold flex items-center justify-center gap-1.5 hover:bg-[#7a3e45] transition-colors text-xs shadow-sm"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" /> Edit Card
+                          </button>
+                          <button
+                            onClick={() => setDeleteModal({ isOpen: true, id: t.id, type: 'template' })}
+                            className="px-3 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-colors shadow-sm"
+                            title="Delete Scroll Card"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                         <button
                           onClick={() => startEditing(t.id, t.price)}
-                          className="w-full py-2.5 rounded-xl bg-[#2C2623] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#1a1614] transition-colors text-xs shadow-sm"
+                          className="w-full py-1.5 rounded-lg border border-gray-200 text-gray-600 font-bold text-[11px] hover:bg-gray-50 transition-colors"
                         >
-                          <Edit3 className="w-3.5 h-3.5 text-[#D4AF37]" /> Set Price: ৳{t.price}
+                          Quick Price: ৳{t.price}
                         </button>
                       </div>
                     )}

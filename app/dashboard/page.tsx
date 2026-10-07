@@ -19,6 +19,8 @@ export default function UserDashboard() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -369,32 +371,46 @@ export default function UserDashboard() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {invitations.map(inv => {
-                    // Try to calculate days left from eventData date if available, or expiresAt
+                    const isExpired = inv.status === 'EXPIRED' || (inv.expiresAt && new Date(inv.expiresAt) < new Date());
+                    const isActive = inv.status === 'ACTIVE' && !isExpired;
+                    const isPending = inv.status === 'PENDING_PAYMENT';
+
+                    // Try to calculate days left from expiresAt or eventData date
                     let daysLeftStr = "";
-                    try {
-                      if (inv.eventData) {
-                        const eventData = JSON.parse(inv.eventData);
-                        if (eventData.date) {
-                          const eventDate = new Date(eventData.date);
-                          const today = new Date();
-                          const diffTime = Math.abs(eventDate.getTime() - today.getTime());
-                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                          if (eventDate >= today) {
-                            daysLeftStr = `${diffDays} days left`;
-                          } else {
-                            daysLeftStr = "Event ended";
+                    if (isExpired) {
+                      daysLeftStr = "Validity Ended";
+                    } else if (isActive && inv.expiresAt) {
+                      const diffTime = new Date(inv.expiresAt).getTime() - new Date().getTime();
+                      const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+                      daysLeftStr = `${diffDays} days validity left`;
+                    } else {
+                      try {
+                        if (inv.eventData) {
+                          const eventData = JSON.parse(inv.eventData);
+                          if (eventData.date) {
+                            const eventDate = new Date(eventData.date);
+                            const today = new Date();
+                            const diffTime = eventDate.getTime() - today.getTime();
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            if (eventDate >= today) {
+                              daysLeftStr = `${diffDays} days to event`;
+                            } else {
+                              daysLeftStr = "Event ended";
+                            }
                           }
                         }
-                      }
-                    } catch (e) {}
+                      } catch (e) {}
+                    }
 
                     return (
                       <div key={inv.id} className="bg-white rounded-[24px] border border-[#D4AF37]/20 overflow-hidden shadow-soft-surface flex flex-col group max-w-sm mx-auto w-full">
                         
                         {/* Timeline */}
                         {daysLeftStr && (
-                          <div className="bg-[#FAF8F5] py-2 px-4 text-center border-b border-[#D4AF37]/20">
-                            <span className="text-xs font-bold text-[#8C4A52] tracking-wider uppercase">{daysLeftStr}</span>
+                          <div className={`py-2 px-4 text-center border-b border-[#D4AF37]/20 ${isExpired ? 'bg-red-50/70' : 'bg-[#FAF8F5]'}`}>
+                            <span className={`text-xs font-bold tracking-wider uppercase ${isExpired ? 'text-red-700' : 'text-[#8C4A52]'}`}>
+                              {daysLeftStr}
+                            </span>
                           </div>
                         )}
 
@@ -404,8 +420,24 @@ export default function UserDashboard() {
                               (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InRyYW5zcGFyZW50IiAvPjwvc3ZnPg==';
                             }}
                           />
-                          <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold uppercase tracking-wider text-[#8C4A52]">
-                            {inv.status === 'ACTIVE' ? 'Paid / Active' : 'Saved'}
+                          <div className="absolute top-4 left-4">
+                            {isExpired ? (
+                              <span className="px-3 py-1 bg-red-100/95 backdrop-blur-sm rounded-full text-xs font-bold uppercase tracking-wider text-red-700 border border-red-200 shadow-xs">
+                                Expired
+                              </span>
+                            ) : isActive ? (
+                              <span className="px-3 py-1 bg-green-100/95 backdrop-blur-sm rounded-full text-xs font-bold uppercase tracking-wider text-green-700 border border-green-200 shadow-xs">
+                                Paid / Active
+                              </span>
+                            ) : isPending ? (
+                              <span className="px-3 py-1 bg-amber-100/95 backdrop-blur-sm rounded-full text-xs font-bold uppercase tracking-wider text-amber-800 border border-amber-200 shadow-xs">
+                                Pending Approval
+                              </span>
+                            ) : (
+                              <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold uppercase tracking-wider text-[#8C4A52] shadow-xs">
+                                Saved / Draft
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -414,7 +446,7 @@ export default function UserDashboard() {
                           <p className="text-sm font-serif italic text-[#7C7267] mb-6">{inv.template.name}</p>
                           
                           <div className="mt-auto pt-6 border-t border-gray-100 flex flex-col gap-3">
-                            {inv.status === 'ACTIVE' ? (
+                            {isActive ? (
                               <button onClick={() => handleCopyUrl(inv.slug, inv.id)} className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#D4AF37] text-[#2C2623] rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#f1e6da] transition-colors">
                                 {copiedId === inv.id ? (
                                   <><CheckCircle2 className="w-4 h-4 text-green-600" /> <span className="text-green-600">Copied URL!</span></>
@@ -422,36 +454,68 @@ export default function UserDashboard() {
                                   <><Copy className="w-4 h-4 text-[#D4AF37]" /> Copy URL</>
                                 )}
                               </button>
+                            ) : isExpired ? (
+                              <div className="w-full py-2.5 px-4 bg-gray-50 border border-gray-200 text-gray-500 rounded-xl text-xs font-bold text-center font-serif">
+                                Card Validity Expired
+                              </div>
+                            ) : isPending ? (
+                              <div className="w-full py-2.5 px-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-bold text-center font-serif">
+                                ⏳ Under Review by Admin
+                              </div>
                             ) : (
-                              <Link href={`/checkout/${inv.slug}`} className="w-full px-4 py-3 bg-[#8C4A52] text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#7a3e45] transition-colors shadow-elevated-card">
-                                <CreditCard className="w-4 h-4" /> Pay Now
-                              </Link>
+                              <button
+                                onClick={() => {
+                                  setNavigatingId(`pay-${inv.id}`);
+                                  router.push(`/checkout/${inv.slug}`);
+                                }}
+                                disabled={navigatingId === `pay-${inv.id}`}
+                                className="w-full px-4 py-3 bg-[#8C4A52] text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#7a3e45] transition-colors shadow-elevated-card disabled:opacity-50"
+                              >
+                                {navigatingId === `pay-${inv.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                                <span>{navigatingId === `pay-${inv.id}` ? "Opening Checkout..." : "Pay Now"}</span>
+                              </button>
                             )}
                             
                             <div className="flex items-center justify-between gap-2">
-                              <Link href={`/edit/${inv.id}`} className="flex-1 px-4 py-2 bg-[#F9F0EC] text-[#8C4A52] rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#eed9d5] transition-colors">
-                                <Edit3 className="w-4 h-4" /> {inv.status === 'ACTIVE' ? 'Edit (Restricted)' : 'Edit'}
-                              </Link>
+                              <button
+                                onClick={() => {
+                                  setNavigatingId(`edit-${inv.id}`);
+                                  router.push(`/edit/${inv.id}`);
+                                }}
+                                disabled={navigatingId === `edit-${inv.id}`}
+                                className="flex-1 px-4 py-2 bg-[#F9F0EC] text-[#8C4A52] rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#eed9d5] transition-colors disabled:opacity-50"
+                              >
+                                {navigatingId === `edit-${inv.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit3 className="w-4 h-4" />}
+                                <span>{isActive ? 'Edit (Restricted)' : 'Edit'}</span>
+                              </button>
                               <Link href={`/invite/${inv.slug}`} target="_blank" className="p-2 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-colors">
                                 <Eye className="w-5 h-5" />
                               </Link>
                               <button 
+                                disabled={deletingId === inv.id}
                                 onClick={async () => {
                                   const msg = inv.status === 'ACTIVE' 
                                     ? "You have already paid for this invitation. Are you absolutely sure you want to delete it?"
                                     : "Are you sure you want to delete this invitation?";
                                   if (confirm(msg)) {
-                                    const res = await fetch(`/api/user/invitations/${inv.id}`, { method: 'DELETE' });
-                                    if (res.ok) {
-                                      setInvitations(prev => prev.filter(i => i.id !== inv.id));
-                                    } else {
-                                      alert("Failed to delete invitation");
+                                    setDeletingId(inv.id);
+                                    try {
+                                      const res = await fetch(`/api/user/invitations/${inv.id}`, { method: 'DELETE' });
+                                      if (res.ok) {
+                                        setInvitations(prev => prev.filter(i => i.id !== inv.id));
+                                      } else {
+                                        alert("Failed to delete invitation");
+                                      }
+                                    } catch (e) {
+                                      alert("Error deleting invitation");
+                                    } finally {
+                                      setDeletingId(null);
                                     }
                                   }
                                 }}
-                                className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors disabled:opacity-50"
                               >
-                                <Trash2 className="w-5 h-5" />
+                                {deletingId === inv.id ? <Loader2 className="w-5 h-5 animate-spin text-red-600" /> : <Trash2 className="w-5 h-5" />}
                               </button>
                             </div>
                           </div>

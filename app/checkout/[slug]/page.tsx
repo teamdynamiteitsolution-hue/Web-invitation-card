@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { Header } from "@/components/Header";
+import { getOrSeedPaymentMethods } from "@/lib/payment-methods";
 import CheckoutClient from "./CheckoutClient";
 
 export default async function CheckoutPage({ params }: { params: { slug: string } }) {
@@ -20,24 +21,36 @@ export default async function CheckoutPage({ params }: { params: { slug: string 
     redirect("/login?redirect=/checkout/" + params.slug);
   }
 
-  const invitation = await prisma.invitation.findUnique({
-    where: { slug: params.slug },
-    include: { 
-      template: true,
-      animation: true,
-      durationTier: true
-    }
-  });
+  const [invitation, durationTiers, paymentMethods] = await Promise.all([
+    prisma.invitation.findUnique({
+      where: { slug: params.slug },
+      include: { 
+        template: true,
+        animation: true,
+        durationTier: true
+      }
+    }),
+    prisma.durationTier.findMany({
+      where: { isActive: true },
+      orderBy: { days: 'asc' }
+    }),
+    getOrSeedPaymentMethods()
+  ]);
 
   if (!invitation) return notFound();
 
-  // Calculate total price
-  const total = (invitation.template.price || 0) + (invitation.animation.price || 0) + (invitation.durationTier.price || 0);
+  // Calculate default base price
+  const total = (invitation.template?.price || 0) + (invitation.animation?.price || 0) + (invitation.durationTier?.price || 0);
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#2C2623] font-sans selection:bg-[#D4AF37]/30">
       <Header />
-      <CheckoutClient invitation={invitation} total={total} />
+      <CheckoutClient 
+        invitation={invitation} 
+        total={total} 
+        durationTiers={durationTiers}
+        initialPaymentMethods={paymentMethods}
+      />
     </div>
   );
 }
