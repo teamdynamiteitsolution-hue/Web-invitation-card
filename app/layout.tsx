@@ -3,11 +3,11 @@ import "./globals.css";
 import { SecurityProvider } from "@/components/SecurityProvider";
 
 export const metadata: Metadata = {
-  title: "Entry Gravity | Interactive Digital Invitation Platform",
+  title: "উৎসব | Interactive Digital Invitation Platform",
   description:
     "A premium mobile-first digital invitation platform featuring tactile opening ceremonies, multi-zone scratch reveals, and physical stationery depth.",
   openGraph: {
-    title: "Entry Gravity | Interactive Digital Invitations",
+    title: "উৎসব | Interactive Digital Invitations",
     description: "Experience invitations transformed into interactive ceremonial memories.",
     type: "website",
   },
