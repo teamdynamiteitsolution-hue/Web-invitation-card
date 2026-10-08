@@ -20,6 +20,86 @@ export interface TemplateDefinition {
 
 export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
   {
+    id: 'tmpl-01-royal-grandeur',
+    slug: 'patachitra-royal-scroll',
+    name: 'The Royal Grandeur Scroll',
+    category: 'wedding',
+    description: 'Majestic royal palace archway, gold foil detailing, monogram seal, and full ceremonial itinerary.',
+    experienceType: 'SCROLL',
+    compositionId: 'scroll_full_flow',
+    previewImageUrl: '/assets/categories/wedding.webp',
+    imageSlots: [
+      { id: 'couplePhoto', label: 'Hero Couple Photo (Optional)', description: 'Shown in the opening hero presentation', required: false },
+      { id: 'groomPhoto', label: 'Groom Photo', description: 'Shown in the Couple section', required: true },
+      { id: 'bridePhoto', label: 'Bride Photo', description: 'Shown in the Couple section', required: true },
+    ],
+    textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
+  },
+  {
+    id: 'tmpl-02-modern-editorial',
+    slug: 'modern-editorial-scroll',
+    name: 'Modern Editorial Vogue Scroll',
+    category: 'reception',
+    description: 'High-fashion editorial magazine layout with asymmetric typography and minimalist storytelling.',
+    experienceType: 'SCROLL',
+    compositionId: 'scroll_full_flow',
+    previewImageUrl: '/assets/categories/anniversary.webp',
+    imageSlots: [
+      { id: 'couplePhoto', label: 'Cover Couple Photo', description: 'Editorial cover image', required: false },
+      { id: 'bridePhoto', label: 'Bride Portrait', description: 'Profile feature', required: true },
+      { id: 'groomPhoto', label: 'Groom Portrait', description: 'Profile feature', required: true },
+    ],
+    textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
+  },
+  {
+    id: 'tmpl-03-golden-haldi',
+    slug: 'carnival-haldi-scroll',
+    name: 'Festive Marigold Dhol Scroll',
+    category: 'holud',
+    description: 'Vibrant turmeric yellow and marigold celebration scroll with Haldi, Mehendi and Sangeet rituals.',
+    experienceType: 'SCROLL',
+    compositionId: 'scroll_full_flow',
+    previewImageUrl: '/assets/categories/haldi.webp',
+    imageSlots: [
+      { id: 'couplePhoto', label: 'Celebration Hero Photo', description: 'Festive hero banner photo', required: false },
+      { id: 'groomPhoto', label: 'Groom Photo', description: 'Holud portrait', required: true },
+      { id: 'bridePhoto', label: 'Bride Photo', description: 'Holud portrait', required: true },
+    ],
+    textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
+  },
+  {
+    id: 'tmpl-04-celestial-midnight',
+    slug: 'cosmic-midnight-scroll',
+    name: 'Celestial Midnight Aurora Scroll',
+    category: 'birthday',
+    description: 'Deep midnight navy, starlight constellation monogram, and luminous night reception itinerary.',
+    experienceType: 'SCROLL',
+    compositionId: 'scroll_full_flow',
+    previewImageUrl: '/assets/categories/birthday.webp',
+    imageSlots: [
+      { id: 'couplePhoto', label: 'Starlight Hero Portrait', description: 'Main night portrait', required: false },
+      { id: 'bridePhoto', label: 'The Star / Bride Photo', description: 'Portrait feature', required: true },
+      { id: 'groomPhoto', label: 'Partner / Groom Photo', description: 'Portrait feature', required: true },
+    ],
+    textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
+  },
+  {
+    id: 'tmpl-05-botanical-meadow',
+    slug: 'scrapbook-botanical-scroll',
+    name: 'Botanical Meadow Scrapbook Scroll',
+    category: 'wedding',
+    description: 'Romantic sage green and pressed botanical herbarium scroll with handcrafted scrapbook accents.',
+    experienceType: 'SCROLL',
+    compositionId: 'scroll_full_flow',
+    previewImageUrl: '/assets/categories/boubhat.webp',
+    imageSlots: [
+      { id: 'couplePhoto', label: 'Garden Hero Photo', description: 'Garden celebration photo', required: false },
+      { id: 'bridePhoto', label: 'Bride Garden Portrait', description: 'Bride portrait', required: true },
+      { id: 'groomPhoto', label: 'Groom Garden Portrait', description: 'Groom portrait', required: true },
+    ],
+    textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
+  },
+  {
     id: 'tmpl-08-scroll-experience',
     slug: 'scroll-experience',
     name: 'Royal Heritage Scroll',
@@ -27,15 +107,11 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     description: 'Vertical luxury storytelling experience in royal ivory and gold with multi-layered sections.',
     experienceType: 'SCROLL',
     compositionId: 'scroll_full_flow',
-    previewImageUrl: '',
+    previewImageUrl: '/assets/categories/wedding.webp',
     imageSlots: [
       { id: 'couplePhoto', label: 'Hero Couple Photo (Optional)', description: 'Shown in the opening hero presentation', required: false },
       { id: 'groomPhoto', label: 'Groom Photo', description: 'Shown in the Couple section', required: true },
       { id: 'bridePhoto', label: 'Bride Photo', description: 'Shown in the Couple section', required: true },
-      { id: 'gallery1', label: 'Gallery Photo 1', description: 'Photo in the interactive gallery grid', required: false },
-      { id: 'gallery2', label: 'Gallery Photo 2', description: 'Photo in the interactive gallery grid', required: false },
-      { id: 'gallery3', label: 'Gallery Photo 3', description: 'Photo in the interactive gallery grid', required: false },
-      { id: 'gallery4', label: 'Gallery Photo 4', description: 'Photo in the interactive gallery grid', required: false }
     ],
     textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
   },
@@ -47,15 +123,11 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     description: 'Fresh emerald and sage floral scroll experience with distinct garden styling.',
     experienceType: 'SCROLL',
     compositionId: 'scroll_full_flow',
-    previewImageUrl: '',
+    previewImageUrl: '/assets/categories/boubhat.webp',
     imageSlots: [
       { id: 'couplePhoto', label: 'Hero Couple Photo (Optional)', description: 'Shown in the opening hero presentation', required: false },
       { id: 'groomPhoto', label: 'Groom Photo', description: 'Shown in the Couple section', required: true },
       { id: 'bridePhoto', label: 'Bride Photo', description: 'Shown in the Couple section', required: true },
-      { id: 'gallery1', label: 'Gallery Photo 1', description: 'Photo in the interactive gallery grid', required: false },
-      { id: 'gallery2', label: 'Gallery Photo 2', description: 'Photo in the interactive gallery grid', required: false },
-      { id: 'gallery3', label: 'Gallery Photo 3', description: 'Photo in the interactive gallery grid', required: false },
-      { id: 'gallery4', label: 'Gallery Photo 4', description: 'Photo in the interactive gallery grid', required: false }
     ],
     textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
   },
@@ -67,15 +139,11 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     description: 'Vibrant marigold yellow and golden celebration scroll designed specially for Gaye Holud, Mehendi and Sangeet.',
     experienceType: 'SCROLL',
     compositionId: 'scroll_full_flow',
-    previewImageUrl: '',
+    previewImageUrl: '/assets/categories/haldi.webp',
     imageSlots: [
       { id: 'couplePhoto', label: 'Celebration Hero Photo', description: 'Festive hero banner photo', required: false },
-      { id: 'groomPhoto', label: 'Groom / Partner Photo', description: 'Celebration couple portrait', required: true },
-      { id: 'bridePhoto', label: 'Bride / Star Photo', description: 'Celebration couple portrait', required: true },
-      { id: 'gallery1', label: 'Haldi Moment 1', description: 'Photo gallery of yellow floral memories', required: false },
-      { id: 'gallery2', label: 'Haldi Moment 2', description: 'Photo gallery of yellow floral memories', required: false },
-      { id: 'gallery3', label: 'Haldi Moment 3', description: 'Photo gallery of yellow floral memories', required: false },
-      { id: 'gallery4', label: 'Haldi Moment 4', description: 'Photo gallery of yellow floral memories', required: false }
+      { id: 'groomPhoto', label: 'Groom Photo', description: 'Celebration couple portrait', required: true },
+      { id: 'bridePhoto', label: 'Bride Photo', description: 'Celebration couple portrait', required: true },
     ],
     textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
   },
@@ -87,13 +155,9 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     description: 'Enchanting midnight violet, gold confetti and birthday milestones with interactive wish counter.',
     experienceType: 'SCROLL',
     compositionId: 'scroll_full_flow',
-    previewImageUrl: '',
+    previewImageUrl: '/assets/categories/birthday.webp',
     imageSlots: [
       { id: 'couplePhoto', label: 'Birthday Star Portrait', description: 'Main portrait for the birthday star', required: false },
-      { id: 'gallery1', label: 'Memories Photo 1', description: 'Growing up and milestones photo gallery', required: false },
-      { id: 'gallery2', label: 'Memories Photo 2', description: 'Growing up and milestones photo gallery', required: false },
-      { id: 'gallery3', label: 'Memories Photo 3', description: 'Growing up and milestones photo gallery', required: false },
-      { id: 'gallery4', label: 'Memories Photo 4', description: 'Growing up and milestones photo gallery', required: false }
     ],
     textSlots: ['personName', 'turningAge', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
   },
@@ -102,36 +166,28 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     slug: 'corporate-scroll',
     name: 'Corporate Prestige Summit Scroll',
     category: 'corporate',
-    description: 'Executive deep navy and platinum scroll experience crafted for corporate galas, annual summits, conferences, and office launches.',
+    description: 'Executive deep navy and platinum scroll experience crafted for corporate galas and annual summits.',
     experienceType: 'SCROLL',
     compositionId: 'scroll_full_flow',
-    previewImageUrl: '',
+    previewImageUrl: '/assets/categories/anniversary.webp',
     imageSlots: [
       { id: 'couplePhoto', label: 'Keynote / Event Banner Photo', description: 'Main summit banner or executive photo', required: false },
-      { id: 'gallery1', label: 'Summit Highlight 1', description: 'Key milestones or speaker preview', required: false },
-      { id: 'gallery2', label: 'Summit Highlight 2', description: 'Key milestones or speaker preview', required: false },
-      { id: 'gallery3', label: 'Summit Highlight 3', description: 'Key milestones or speaker preview', required: false },
-      { id: 'gallery4', label: 'Summit Highlight 4', description: 'Key milestones or speaker preview', required: false }
     ],
-    textSlots: ['brideName', 'eventLabel', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
+    textSlots: ['brideName', 'groomName', 'eventLabel', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
   },
   {
     id: 'tmpl-16-velvet-scroll',
     slug: 'velvet-scroll',
     name: 'Ruby Velvet Romance Scroll',
     category: 'reception',
-    description: 'Deep crimson velvet and champagne gold opulent scroll for grand wedding receptions and Royal Nikah evenings.',
+    description: 'Deep crimson velvet and champagne gold opulent scroll for grand wedding receptions.',
     experienceType: 'SCROLL',
     compositionId: 'scroll_full_flow',
-    previewImageUrl: '',
+    previewImageUrl: '/assets/categories/boubhat.webp',
     imageSlots: [
       { id: 'couplePhoto', label: 'Hero Couple Portrait', description: 'Opening ceremony presentation', required: false },
       { id: 'groomPhoto', label: 'Groom Photo', description: 'Royal couple showcase', required: true },
       { id: 'bridePhoto', label: 'Bride Photo', description: 'Royal couple showcase', required: true },
-      { id: 'gallery1', label: 'Royal Moment 1', description: 'Photo in interactive moments grid', required: false },
-      { id: 'gallery2', label: 'Royal Moment 2', description: 'Photo in interactive moments grid', required: false },
-      { id: 'gallery3', label: 'Royal Moment 3', description: 'Photo in interactive moments grid', required: false },
-      { id: 'gallery4', label: 'Royal Moment 4', description: 'Photo in interactive moments grid', required: false }
     ],
     textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
   },
@@ -140,10 +196,10 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     slug: 'floral-romance-scroll',
     name: 'Floral Romance Luxury Scroll',
     category: 'wedding',
-    description: 'Enchanting floral animated scroll invitation with timeline itinerary, countdown, venue guide, and elegant typography.',
+    description: 'Enchanting floral animated scroll invitation with timeline itinerary and countdown.',
     experienceType: 'SCROLL',
     compositionId: 'scroll_full_flow',
-    previewImageUrl: '',
+    previewImageUrl: '/assets/categories/wedding.webp',
     imageSlots: [
       { id: 'couplePhoto', label: 'Couple / Hero Photo', description: 'Featured venue / couple illustration or photo', required: false }
     ],
@@ -154,10 +210,10 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     slug: 'editorial-botanical-scroll',
     name: 'Editorial Botanical Scroll',
     category: 'wedding',
-    description: 'Modern editorial typography with botanical framed portrait, subtle arches, and clean minimalist story layout.',
+    description: 'Modern editorial typography with botanical framed portrait and minimalist story layout.',
     experienceType: 'SCROLL',
     compositionId: 'scroll_full_flow',
-    previewImageUrl: '',
+    previewImageUrl: '/assets/categories/wedding.webp',
     imageSlots: [
       { id: 'couplePhoto', label: 'Couple / Hero Photo', description: 'Main botanical arch portrait', required: false },
       { id: 'bridePhoto', label: 'Bride Photo', description: 'The Bride portrait showcase', required: true },
@@ -170,18 +226,14 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     slug: 'cinematic-story-scroll',
     name: 'Cinematic Story Scroll',
     category: 'wedding',
-    description: 'Dramatic full-screen visual storytelling with dark cinematic mood, chapter reveals, and immersive imagery.',
+    description: 'Dramatic full-screen visual storytelling with dark cinematic mood.',
     experienceType: 'SCROLL',
     compositionId: 'scroll_full_flow',
-    previewImageUrl: '',
+    previewImageUrl: '/assets/categories/wedding.webp',
     imageSlots: [
       { id: 'couplePhoto', label: 'Couple / Hero Photo', description: 'Main cinematic opening portrait', required: false },
       { id: 'bridePhoto', label: 'Bride Photo', description: 'Bride portrait feature', required: true },
       { id: 'groomPhoto', label: 'Groom Photo', description: 'Groom portrait feature', required: true },
-      { id: 'gallery1', label: 'Gallery 1', description: 'Story chapter memory frame 1', required: false },
-      { id: 'gallery2', label: 'Gallery 2', description: 'Story chapter memory frame 2', required: false },
-      { id: 'gallery3', label: 'Gallery 3', description: 'Story chapter memory frame 3', required: false },
-      { id: 'gallery4', label: 'Gallery 4', description: 'Story chapter memory frame 4', required: false }
     ],
     textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'eventLabel']
   },
@@ -190,16 +242,14 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     slug: 'botanical-magazine-scroll',
     name: 'Botanical Magazine Scroll',
     category: 'wedding',
-    description: 'High-fashion magazine layout with asymmetric botanical cutouts, earth tones, and warm organic styling.',
+    description: 'High-fashion magazine layout with asymmetric botanical cutouts and earth tones.',
     experienceType: 'SCROLL',
     compositionId: 'scroll_full_flow',
-    previewImageUrl: '',
+    previewImageUrl: '/assets/categories/boubhat.webp',
     imageSlots: [
       { id: 'couplePhoto', label: 'Couple / Hero Photo', description: 'Magazine cover opening portrait', required: false },
       { id: 'bridePhoto', label: 'Bride Photo', description: 'Meet the couple - Bride portrait', required: true },
       { id: 'groomPhoto', label: 'Groom Photo', description: 'Meet the couple - Groom portrait', required: true },
-      { id: 'gallery1', label: 'Gallery 1', description: 'Little moments editorial photo 1', required: false },
-      { id: 'gallery2', label: 'Gallery 2', description: 'Little moments editorial photo 2', required: false }
     ],
     textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'eventLabel']
   }
@@ -207,5 +257,9 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
 
 export const getTemplateById = (id: string | null): TemplateDefinition | undefined => {
   if (!id) return undefined;
-  return TEMPLATE_DEFINITIONS.find(t => t.id === id || t.slug === id);
+  const lower = id.toLowerCase();
+  return TEMPLATE_DEFINITIONS.find(t => 
+    t.id.toLowerCase() === lower || 
+    t.slug.toLowerCase() === lower
+  );
 };

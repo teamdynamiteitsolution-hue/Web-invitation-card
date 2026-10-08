@@ -7,7 +7,10 @@ import { Footer } from "@/components/Footer";
 
 
 export default function HomeClient({ categories, templates, animations }: { categories: any[], templates: any[], animations: any[] }) {
-  const featuredTemplates = templates || [];
+  const featuredTemplates = (templates || []).filter((t: any) => {
+    const exp = (t.experienceType || '').toLowerCase();
+    return exp !== 'scroll' && exp !== 'scroll_story';
+  });
 
   return (
     <main className="relative z-10 w-full overflow-x-hidden">

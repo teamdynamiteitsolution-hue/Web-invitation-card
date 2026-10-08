@@ -28,17 +28,20 @@ export default function CorporatePrestigeScroll({
     venueAddress = "Gulshan-1 Commercial District, Dhaka, Bangladesh",
     googleMapsUrl = "",
     couplePhoto = "/assets/categories/corporate.webp",
-    gallery1 = "/assets/Cards/card 1.png",
-    gallery2 = "/assets/Cards/card 2.png",
-    gallery3 = "/assets/Cards/card 3.png",
-    gallery4 = "/assets/Cards/card 4.png",
+    gallery1 = "/assets/categories/corporate.webp",
+    gallery2 = "/assets/categories/anniversary.webp",
+    gallery3 = "/assets/categories/wedding.webp",
+    gallery4 = "/assets/categories/boubhat.webp",
     invitationMessage = "You are cordially invited to connect with industry leaders, visionary keynote speakers, and corporate changemakers for an evening of honor, insights and strategic partnerships.",
   } = eventData || {};
 
-  const title = brideName || "Apex Global Summit";
   const typographyStyles = eventData?.typographyStyles || {};
   const titleStyle = typographyStyles['brideName'] ? getPresetStyle(typographyStyles['brideName']) : { fontFamily: 'Cinzel, serif' };
+  const groomStyle = typographyStyles['groomName'] ? getPresetStyle(typographyStyles['groomName']) : { fontFamily: 'Cinzel, serif' };
   const headingStyle = typographyStyles['primaryHeading'] ? getPresetStyle(typographyStyles['primaryHeading']) : { fontFamily: 'Cinzel, serif' };
+
+  const hasBothNames = Boolean(brideName && groomName && brideName !== groomName);
+  const title = hasBothNames ? `${brideName} & ${groomName}` : (brideName || groomName || "Apex Global Summit");
 
   // Countdown
   const [timeLeft, setTimeLeft] = useState({ days: 90, hours: 12, minutes: 0, seconds: 0 });
@@ -120,8 +123,16 @@ export default function CorporatePrestigeScroll({
 
         {/* Summit Title */}
         <div className="relative z-10 my-auto py-6 max-w-2xl mx-auto w-full px-2 space-y-4">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-[#F8FAFC] tracking-tight leading-tight break-words drop-shadow-xl font-serif" style={titleStyle as any}>
-            {title}
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-[#F8FAFC] tracking-tight leading-tight break-words drop-shadow-xl font-serif">
+            {hasBothNames ? (
+              <>
+                <span style={titleStyle as any}>{brideName}</span>
+                <span className="text-[#38BDF8] mx-2 font-light">&amp;</span>
+                <span style={groomStyle as any}>{groomName}</span>
+              </>
+            ) : (
+              <span style={titleStyle as any}>{title}</span>
+            )}
           </h1>
 
           <div>

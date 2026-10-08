@@ -6,8 +6,13 @@ import { PlayCircle, Sparkles, Heart, ArrowRight } from "lucide-react";
 import { playTactileSound, triggerConfettiBurst } from "@/lib/experience-engine";
 
 import RoyalHeritageScroll from "./RoyalHeritageScroll";
-import BotanicalEmeraldScroll from "./BotanicalEmeraldScroll";
+import PatachitraRoyalScroll from "./PatachitraRoyalScroll";
+import ModernEditorialScroll from "./ModernEditorialScroll";
+import CarnivalHaldiScroll from "./CarnivalHaldiScroll";
+import CosmicMidnightScroll from "./CosmicMidnightScroll";
+import ScrapbookBotanicalScroll from "./ScrapbookBotanicalScroll";
 import GoldenHaldiScroll from "./GoldenHaldiScroll";
+import BotanicalEmeraldScroll from "./BotanicalEmeraldScroll";
 import CelestialBirthdayScroll from "./CelestialBirthdayScroll";
 import CorporatePrestigeScroll from "./CorporatePrestigeScroll";
 import RubyVelvetScroll from "./RubyVelvetScroll";
@@ -167,101 +172,47 @@ export default function ScrollExperience({
     }
   };
 
-  const slug = template?.slug || eventData?.templateSlug || "";
-  const id = template?.id || eventData?.templateDefinitionId || "";
-  const category = eventData?.category || template?.category || "";
+  const slug = (template?.slug || eventData?.templateSlug || "").toLowerCase();
+  const id = (template?.id || eventData?.templateDefinitionId || "").toLowerCase();
+  const category = (eventData?.category || template?.category?.slug || template?.category || "").toLowerCase();
 
   // Render Scroll Component
   let scrollContent: React.ReactNode = null;
 
-  if (slug === "floral-romance-scroll" || id === "tmpl-17-floral-romance-scroll") {
-    scrollContent = (
-      <FloralRomanceScroll
-        template={template}
-        animation={animation}
-        eventData={eventData}
-        revealMode={revealMode}
-        customImage={customImage}
-        bgBlur={bgBlur}
-        skipAnimation={true}
-      />
-    );
+  if (slug === "patachitra-royal-scroll" || slug === "royal-grandeur-scroll" || id === "tmpl-01-patachitra-royal") {
+    scrollContent = <PatachitraRoyalScroll template={template} eventData={eventData} skipAnimation={true} />;
+  } else if (slug === "modern-editorial-scroll" || id === "tmpl-02-modern-editorial") {
+    scrollContent = <ModernEditorialScroll template={template} eventData={eventData} skipAnimation={true} />;
+  } else if (slug === "carnival-haldi-scroll" || id === "tmpl-03-carnival-haldi") {
+    scrollContent = <CarnivalHaldiScroll template={template} eventData={eventData} skipAnimation={true} />;
+  } else if (slug === "cosmic-midnight-scroll" || slug === "celestial-midnight-scroll" || id === "tmpl-04-cosmic-midnight" || id === "tmpl-04-celestial-midnight") {
+    scrollContent = <CosmicMidnightScroll template={template} eventData={eventData} skipAnimation={true} />;
+  } else if (slug === "scrapbook-botanical-scroll" || slug === "botanical-meadow-scroll" || id === "tmpl-05-scrapbook-botanical" || id === "tmpl-05-botanical-meadow") {
+    scrollContent = <ScrapbookBotanicalScroll template={template} eventData={eventData} skipAnimation={true} />;
+  } else if (slug === "golden-haldi-scroll" || slug === "haldi-scroll" || id === "tmpl-03-golden-haldi" || id === "tmpl-13-haldi-scroll" || category === "haldi" || category === "holud") {
+    scrollContent = <CarnivalHaldiScroll template={template} eventData={eventData} skipAnimation={true} />;
+  } else if (slug === "floral-romance-scroll" || id === "tmpl-17-floral-romance-scroll") {
+    scrollContent = <FloralRomanceScroll template={template} animation={animation} eventData={eventData} revealMode={revealMode} customImage={customImage} bgBlur={bgBlur} skipAnimation={true} />;
   } else if (slug === "editorial-botanical-scroll" || id === "tmpl-18-editorial-botanical-scroll") {
-    scrollContent = (
-      <EditorialBotanicalScroll
-        template={template}
-        eventData={eventData}
-        skipAnimation={true}
-      />
-    );
+    scrollContent = <EditorialBotanicalScroll template={template} eventData={eventData} skipAnimation={true} />;
   } else if (slug === "cinematic-story-scroll" || id === "tmpl-19-cinematic-story-scroll") {
-    scrollContent = (
-      <CinematicStoryScroll
-        template={template}
-        eventData={eventData}
-        skipAnimation={true}
-      />
-    );
+    scrollContent = <CinematicStoryScroll template={template} eventData={eventData} skipAnimation={true} />;
   } else if (slug === "botanical-magazine-scroll" || id === "tmpl-20-botanical-magazine-scroll") {
-    scrollContent = (
-      <BotanicalMagazineScroll
-        template={template}
-        eventData={eventData}
-        skipAnimation={true}
-      />
-    );
+    scrollContent = <BotanicalMagazineScroll template={template} eventData={eventData} skipAnimation={true} />;
   } else if (slug === "botanical-scroll" || id === "tmpl-09-botanical-scroll") {
-    scrollContent = (
-      <BotanicalEmeraldScroll
-        template={template}
-        eventData={eventData}
-        skipAnimation={true}
-      />
-    );
-  } else if (slug === "haldi-scroll" || id === "tmpl-13-haldi-scroll" || category === "holud") {
-    scrollContent = (
-      <GoldenHaldiScroll
-        template={template}
-        eventData={eventData}
-        skipAnimation={true}
-      />
-    );
+    scrollContent = <BotanicalEmeraldScroll template={template} eventData={eventData} skipAnimation={true} />;
   } else if (slug === "birthday-scroll" || id === "tmpl-14-birthday-scroll" || category === "birthday") {
-    scrollContent = (
-      <CelestialBirthdayScroll
-        template={template}
-        eventData={eventData}
-        skipAnimation={true}
-      />
-    );
+    scrollContent = <CelestialBirthdayScroll template={template} eventData={eventData} skipAnimation={true} />;
   } else if (slug === "corporate-scroll" || id === "tmpl-15-corporate-scroll" || category === "corporate") {
-    scrollContent = (
-      <CorporatePrestigeScroll
-        template={template}
-        eventData={eventData}
-        skipAnimation={true}
-      />
-    );
-  } else if (slug === "velvet-scroll" || id === "tmpl-16-velvet-scroll" || category === "reception") {
-    scrollContent = (
-      <RubyVelvetScroll
-        template={template}
-        eventData={eventData}
-        skipAnimation={true}
-      />
-    );
+    scrollContent = <CorporatePrestigeScroll template={template} eventData={eventData} skipAnimation={true} />;
+  } else if (slug === "velvet-scroll" || id === "tmpl-16-velvet-scroll") {
+    scrollContent = <RubyVelvetScroll template={template} eventData={eventData} skipAnimation={true} />;
   } else {
-    scrollContent = (
-      <RoyalHeritageScroll
-        template={template}
-        eventData={eventData}
-        skipAnimation={true}
-      />
-    );
+    scrollContent = <RoyalHeritageScroll template={template} eventData={eventData} skipAnimation={true} />;
   }
 
-  const brideName = eventData?.brideName || "Lary";
-  const groomName = eventData?.groomName || "John";
+  const brideName = eventData?.brideName || "Bride";
+  const groomName = eventData?.groomName || "Groom";
   const personName = eventData?.personName || eventData?.brideName || "Guest of Honor";
   const isBirthday = category === "birthday";
 
@@ -298,123 +249,104 @@ export default function ScrollExperience({
                     <PlayCircle className="w-9 h-9 text-[#8C4A52]" />
                   </div>
                   <span className="text-xs font-serif tracking-widest uppercase bg-black/50 px-4 py-1.5 rounded-full border border-white/20">
-                    Tap to Open Invitation
+                    Tap to Open Video Reveal
                   </span>
                 </div>
               )}
-              <button
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  setIsRevealed(true); 
-                }}
-                className="absolute top-4 right-4 z-20 text-[11px] text-white/70 hover:text-white bg-black/40 px-3 py-1 rounded-full backdrop-blur-xs border border-white/10"
-              >
-                Skip
-              </button>
             </div>
           )}
 
-          {/* 2. Curtain Animation Overlay */}
-          {isCurtainAnim && !isVideoAnim && (
-            <div className="relative w-full max-w-[420px] aspect-[9/16] max-h-[100dvh] overflow-hidden flex items-center justify-center rounded-none md:rounded-3xl shadow-2xl border border-[#D4AF37]/30 bg-[#2C2623]">
+          {/* 2. Interactive Curtain Parting */}
+          {isCurtainAnim && (
+            <div 
+              className="relative w-full max-w-[480px] h-[750px] max-h-[90vh] mx-auto overflow-hidden rounded-3xl shadow-2xl bg-[#0F0D0C] flex items-center justify-center cursor-pointer group"
+              onClick={handleOpenCurtain}
+            >
               <div 
                 ref={leftCurtainRef} 
-                className="absolute inset-y-0 left-0 w-1/2 bg-[#8C4A52] z-20 shadow-[10px_0_20px_rgba(0,0,0,0.5)] origin-left"
-                style={{ backgroundImage: "url('/assets/textures/handmade-fiber.webp')", backgroundBlendMode: 'multiply' }}
+                className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-[#63141C] via-[#8C1D28] to-[#4A0E15] border-r border-[#D4AF37]/40 shadow-2xl z-20 flex flex-col justify-between p-6"
               >
-                <div className="absolute right-0 inset-y-0 w-4 bg-gradient-to-r from-transparent to-black/40" />
+                <div className="w-8 h-8 rounded-full border border-[#D4AF37]/50 flex items-center justify-center text-[#D4AF37] text-xs">✦</div>
+                <div className="text-right text-[#D4AF37] text-xs font-serif tracking-widest uppercase">The Royal</div>
               </div>
+
               <div 
                 ref={rightCurtainRef} 
-                className="absolute inset-y-0 right-0 w-1/2 bg-[#8C4A52] z-20 shadow-[-10px_0_20px_rgba(0,0,0,0.5)] origin-right"
-                style={{ backgroundImage: "url('/assets/textures/handmade-fiber.webp')", backgroundBlendMode: 'multiply' }}
+                className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#63141C] via-[#8C1D28] to-[#4A0E15] border-l border-[#D4AF37]/40 shadow-2xl z-20 flex flex-col justify-between p-6"
               >
-                <div className="absolute left-0 inset-y-0 w-4 bg-gradient-to-l from-transparent to-black/40" />
+                <div className="w-8 h-8 rounded-full border border-[#D4AF37]/50 flex items-center justify-center text-[#D4AF37] text-xs self-end">✦</div>
+                <div className="text-left text-[#D4AF37] text-xs font-serif tracking-widest uppercase">Ceremony</div>
               </div>
-              
-              <div className="relative z-30 flex flex-col items-center gap-4 text-center px-6">
-                <div className="w-16 h-16 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#F9F0D0] text-2xl font-serif">
-                  ✦
+
+              <div className="relative z-30 flex flex-col items-center gap-4 text-center px-6 pointer-events-none group-hover:scale-105 transition-transform duration-500">
+                <div className="w-16 h-16 rounded-full bg-[#D4AF37] text-[#181312] flex items-center justify-center shadow-xl border-2 border-white">
+                  <Sparkles className="w-8 h-8 animate-spin" style={{ animationDuration: "12s" }} />
                 </div>
-                <h3 className="text-white text-lg font-serif tracking-widest uppercase">
-                  {isBirthday ? personName : `${brideName} & ${groomName}`}
+                <h3 className="text-2xl font-bold text-white tracking-widest uppercase font-serif">
+                  {brideName} &amp; {groomName}
                 </h3>
-                <button 
-                  onClick={handleOpenCurtain}
-                  className="bg-white/15 backdrop-blur-md border border-white/40 rounded-full px-6 py-3 flex items-center gap-2 text-white font-bold tracking-widest uppercase hover:bg-white/25 transition-all animate-pulse shadow-xl text-xs"
-                >
-                  <span>Tap to Open</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <span className="px-5 py-2 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-bold uppercase tracking-widest border border-white/30 shadow-lg animate-pulse">
+                  Tap to Draw Curtains
+                </span>
               </div>
             </div>
           )}
 
-          {/* 3. Scratch Animation Overlay */}
-          {isScratchAnim && !isVideoAnim && (
-            <div 
-              onClick={handleOpenScratch}
-              className="relative w-full max-w-[420px] aspect-[9/16] max-h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-br from-[#FFF9F2] to-[#FFE6CC] rounded-none md:rounded-3xl shadow-2xl p-8 border border-[#D4AF37]/40 cursor-pointer text-center select-none"
-            >
-              <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#D4AF37] shadow-xl p-1 bg-white mb-6 animate-pulse">
-                <img 
-                  src={eventData?.couplePhoto || "/assets/categories/haldi.webp"} 
-                  alt="Couple" 
-                  className="w-full h-full object-cover rounded-full" 
-                />
-              </div>
-              <h3 className="text-2xl font-bold text-[#D4AF37] mb-2 font-serif">
-                শুভ বিবাহ
-              </h3>
-              <p className="text-sm font-serif italic text-[#7C7267] mb-6">
-                {isBirthday ? personName : `${brideName} & ${groomName}`}
-              </p>
-              <div className="bg-[#D4AF37] text-white px-6 py-3 rounded-full text-xs font-bold tracking-widest uppercase shadow-lg animate-bounce flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                <span>Tap to Reveal Invitation</span>
-              </div>
-            </div>
-          )}
-
-          {/* 4. Wax Seal & Envelope Animation Overlay (Default Interactive) */}
+          {/* 3. Interactive Envelope Reveal */}
           {isEnvelopeAnim && !isVideoAnim && !isCurtainAnim && !isScratchAnim && (
-            <div className="relative w-full max-w-[420px] aspect-[9/16] max-h-[100dvh] flex flex-col items-center justify-center bg-[#FAF8F5] rounded-none md:rounded-3xl shadow-2xl p-6 border border-[#D4AF37]/30 select-none">
-              <div ref={envelopeBoxRef} className="relative w-[300px] h-[220px] flex items-center justify-center [perspective:1000px]">
-                {/* Envelope Body */}
-                <div className="absolute inset-0 bg-[#E8D8D0] rounded-2xl shadow-2xl border border-[#D4AF37]/40 overflow-hidden flex flex-col items-center justify-center p-6 text-center">
-                  <div className="text-[10px] uppercase tracking-[0.25em] text-[#8C4A52] font-semibold mb-1">
-                    Royal Invitation
-                  </div>
-                  <div className="text-base font-bold text-[#2C2623] font-serif tracking-wide">
-                    {isBirthday ? personName : `${brideName} & ${groomName}`}
-                  </div>
-                </div>
-
-                {/* Envelope Flap */}
+            <div 
+              ref={envelopeBoxRef}
+              className="relative w-full max-w-[420px] aspect-[4/5] mx-auto flex flex-col items-center justify-center p-6 cursor-pointer select-none"
+              onClick={handleOpenEnvelope}
+            >
+              <div className="relative w-full h-[320px] bg-[#2C1D18] rounded-2xl shadow-2xl border-2 border-[#D4AF37]/50 flex flex-col justify-between p-8 overflow-hidden">
                 <div 
                   ref={flapRef}
-                  className="absolute top-0 inset-x-0 h-1/2 bg-[#DFBCB5] rounded-t-2xl origin-top border-b border-[#D4AF37]/30 z-10 shadow-md"
-                  style={{ transformStyle: "preserve-3d" }}
+                  className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-[#3D2822] to-[#2C1D18] border-b-2 border-[#D4AF37]/40 origin-top shadow-lg z-20 flex items-center justify-center"
                 />
+                
+                <div className="text-center relative z-10 pt-8">
+                  <span className="text-[10px] font-serif uppercase tracking-[0.3em] text-[#D4AF37] block mb-2">Royal Invitation</span>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white font-serif tracking-wide">
+                    {isBirthday ? personName : `${brideName} & ${groomName}`}
+                  </h3>
+                </div>
 
-                {/* Wax Seal Button */}
-                <button
-                  ref={sealRef}
-                  onClick={handleOpenEnvelope}
-                  className="absolute z-20 w-16 h-16 rounded-full bg-[#8C4A52] text-[#F9F0D0] shadow-2xl flex flex-col items-center justify-center border-2 border-[#D4AF37] hover:scale-105 active:scale-95 transition-transform animate-pulse"
-                >
-                  <Heart className="w-6 h-6 fill-[#F9F0D0]" />
-                  <span className="text-[8px] font-bold tracking-widest uppercase mt-0.5">OPEN</span>
-                </button>
+                <div className="relative z-30 flex flex-col items-center justify-center mt-auto">
+                  <button 
+                    ref={sealRef}
+                    className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#8C4A52] to-[#B85D69] text-[#FAF8F5] border-2 border-[#D4AF37] shadow-2xl flex items-center justify-center font-serif text-xl font-bold transform hover:scale-110 active:scale-95 transition-transform"
+                  >
+                    <Heart className="w-7 h-7 text-[#D4AF37] fill-current" />
+                  </button>
+                  <span className="text-[10px] font-serif uppercase tracking-widest text-[#D4AF37]/80 mt-3 animate-pulse">
+                    Tap Wax Seal to Open
+                  </span>
+                </div>
               </div>
-
-              <span className="text-xs font-serif text-[#7C7267] mt-8 italic animate-bounce">
-                Tap wax seal to open invitation
-              </span>
             </div>
           )}
+
+          {/* 4. Interactive Scratch Reveal */}
+          {isScratchAnim && (
+            <div 
+              className="relative w-full max-w-[420px] aspect-[4/5] mx-auto flex flex-col items-center justify-center p-6 cursor-pointer select-none"
+              onClick={handleOpenScratch}
+            >
+              <div className="w-full p-8 rounded-3xl bg-gradient-to-b from-[#FEF08A] to-[#FACC15] text-[#713F12] border-4 border-white shadow-2xl flex flex-col items-center text-center">
+                <span className="text-4xl mb-4">✨ 🌼 ✨</span>
+                <h3 className="text-2xl font-bold mb-2">গায়ে হলুদ ও উৎসব</h3>
+                <p className="text-xs font-serif mb-6 opacity-90">Touch anywhere to reveal the colorful celebration</p>
+                <div className="px-6 py-2.5 rounded-full bg-white text-[#713F12] font-bold text-xs shadow-lg uppercase tracking-widest animate-bounce">
+                  Tap to Reveal
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
+
     </div>
   );
 }

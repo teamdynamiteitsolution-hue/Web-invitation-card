@@ -3,15 +3,15 @@
 import React, { useState } from 'react';
 import { useEditor } from '../EditorContext';
 import { LayoutTemplate, CheckCircle2, Scroll, Sparkles } from 'lucide-react';
+import { TEMPLATE_DEFINITIONS } from '@/lib/template-definitions';
 
 export const DesignTab = ({ templates }: { templates: any[] }) => {
   const { selectedTemplateId, setSelectedTemplateId, setLayoutPresetId, updateEventData } = useEditor();
   const [filter, setFilter] = useState<'card' | 'scroll' | 'all'>('card');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  // ONLY render templates directly from the database (zero fake/duplicate items)
   const allTemplates = React.useMemo(() => {
-    return (templates || []).map(t => {
+    const dbTemplates = (templates || []).map(t => {
       let manifest: any = {};
       try {
         manifest = typeof t.assetManifest === 'string' ? JSON.parse(t.assetManifest) : (t.assetManifest || {});
@@ -31,6 +31,27 @@ export const DesignTab = ({ templates }: { templates: any[] }) => {
         previewImageUrl: t.previewImageUrl || '',
       };
     });
+
+    const scrollDefs = TEMPLATE_DEFINITIONS.filter(t => t.experienceType === 'SCROLL').map(st => ({
+      id: st.id,
+      slug: st.slug,
+      name: st.name,
+      price: 0,
+      category: st.category || 'wedding',
+      experienceType: 'SCROLL',
+      compositionId: st.compositionId || 'scroll_full_flow',
+      previewImageUrl: st.previewImageUrl || '',
+    }));
+
+    const existingSlugs = new Set(dbTemplates.map(t => t.slug));
+    const combined = [...dbTemplates];
+    for (const def of scrollDefs) {
+      if (!existingSlugs.has(def.slug)) {
+        combined.push(def);
+      }
+    }
+
+    return combined;
   }, [templates]);
 
   const handleSelect = (tmpl: any) => {
@@ -154,16 +175,72 @@ export const DesignTab = ({ templates }: { templates: any[] }) => {
 
           // Dedicated accurate visual banner for each scroll template
           const renderScrollThumbnail = () => {
-            if (tmpl.slug === 'haldi-scroll') {
+            if (tmpl.slug === 'patachitra-royal-scroll' || tmpl.slug === 'royal-grandeur-scroll') {
+              return (
+                <div className="w-full h-full bg-gradient-to-b from-[#1F1714] via-[#35251F] to-[#120D0B] text-[#FAF6F0] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden border border-[#D4AF37]/50">
+                  <div className="text-xl text-[#D4AF37]">👑 ⚜</div>
+                  <div>
+                    <span className="text-[8px] uppercase tracking-widest font-bold block text-[#D4AF37]">Royal Proclamation</span>
+                    <h5 className="font-bold text-xs leading-tight text-white font-serif">{tmpl.name}</h5>
+                  </div>
+                  <span className="text-[8px] bg-[#D4AF37]/25 border border-[#D4AF37]/60 px-2 py-0.5 rounded-full font-bold uppercase self-center text-[#D4AF37]">
+                    Parchment Decree
+                  </span>
+                </div>
+              );
+            }
+            if (tmpl.slug === 'modern-editorial-scroll') {
+              return (
+                <div className="w-full h-full bg-[#111111] text-white flex flex-col justify-between p-3 select-none text-center relative overflow-hidden border border-neutral-700">
+                  <div className="text-xs font-serif font-black tracking-[0.25em] text-neutral-400 uppercase">VOGUE VIBES</div>
+                  <div>
+                    <span className="text-[8px] uppercase tracking-widest font-mono text-neutral-400 block">Editorial Magazine</span>
+                    <h5 className="font-bold text-xs leading-tight text-white font-serif">{tmpl.name}</h5>
+                  </div>
+                  <span className="text-[8px] bg-white text-black px-2 py-0.5 rounded-none font-bold uppercase self-center tracking-widest">
+                    High Fashion
+                  </span>
+                </div>
+              );
+            }
+            if (tmpl.slug === 'carnival-haldi-scroll' || tmpl.slug === 'golden-haldi-scroll' || tmpl.slug === 'haldi-scroll') {
               return (
                 <div className="w-full h-full bg-gradient-to-b from-[#FEF08A] via-[#FACC15] to-[#CA8A04] text-[#713F12] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden">
-                  <div className="text-xl">🌼</div>
+                  <div className="text-xl">🌼 🥁</div>
                   <div>
-                    <span className="text-[8px] uppercase tracking-widest font-bold block opacity-80">Gaye Holud</span>
-                    <h5 className="font-bold text-xs leading-tight text-[#713F12]">Haldi Fiesta</h5>
+                    <span className="text-[8px] uppercase tracking-widest font-bold block opacity-80">Gaye Holud &amp; Dhol</span>
+                    <h5 className="font-bold text-xs leading-tight text-[#713F12]">{tmpl.name}</h5>
                   </div>
-                  <span className="text-[8px] bg-white/70 backdrop-blur-xs px-2 py-0.5 rounded-full font-bold uppercase self-center shadow-xs">
-                    Festive Yellow
+                  <span className="text-[8px] bg-white/80 backdrop-blur-xs px-2 py-0.5 rounded-full font-bold uppercase self-center shadow-xs">
+                    Festive Carnival
+                  </span>
+                </div>
+              );
+            }
+            if (tmpl.slug === 'cosmic-midnight-scroll' || tmpl.slug === 'celestial-midnight-scroll') {
+              return (
+                <div className="w-full h-full bg-gradient-to-b from-[#05070E] via-[#0D1527] to-[#04060A] text-white flex flex-col justify-between p-3 select-none text-center relative overflow-hidden border border-indigo-900/60">
+                  <div className="text-xl text-amber-300">🌌 ✨</div>
+                  <div>
+                    <span className="text-[8px] uppercase tracking-widest font-bold block text-amber-300">Cosmic Observatory</span>
+                    <h5 className="font-bold text-xs leading-tight text-white font-serif">{tmpl.name}</h5>
+                  </div>
+                  <span className="text-[8px] bg-indigo-950/80 border border-amber-400/50 px-2 py-0.5 rounded-full font-bold uppercase self-center text-amber-200">
+                    Nebula Starlight
+                  </span>
+                </div>
+              );
+            }
+            if (tmpl.slug === 'scrapbook-botanical-scroll' || tmpl.slug === 'botanical-meadow-scroll') {
+              return (
+                <div className="w-full h-full bg-[#F7F4EB] text-[#2C3E30] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden border border-[#D8CEBE]">
+                  <div className="text-xl text-[#3D5A45]">🌿 ✉️</div>
+                  <div>
+                    <span className="text-[8px] uppercase tracking-widest font-mono text-[#5C6E5E] block">Herbarium Notes</span>
+                    <h5 className="font-bold text-xs leading-tight text-[#1C2E20] font-serif">{tmpl.name}</h5>
+                  </div>
+                  <span className="text-[8px] bg-[#C8D6AF]/80 border border-[#B3C498] px-2 py-0.5 rounded-sm font-mono uppercase self-center text-[#2E4231]">
+                    Pressed Flora
                   </span>
                 </div>
               );
