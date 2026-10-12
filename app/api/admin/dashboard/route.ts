@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { ensureScrollTemplatesInDb } from "@/lib/template-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,9 @@ export async function GET() {
     if (payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    // Ensure all registered scroll templates exist in the database without overwriting prices
+    await ensureScrollTemplatesInDb(prisma);
 
     const users = await prisma.user.findMany({ 
       include: {

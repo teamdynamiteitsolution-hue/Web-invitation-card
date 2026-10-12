@@ -26,6 +26,9 @@ export async function POST(req: Request) {
     }
 
     const newPrice = parseFloat(price);
+    if (isNaN(newPrice) || newPrice < 0) {
+      return NextResponse.json({ error: "Invalid price value" }, { status: 400 });
+    }
 
     if (type === 'template') {
       const existing = await prisma.template.findFirst({

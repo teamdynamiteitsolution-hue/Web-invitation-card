@@ -39,6 +39,11 @@ export default function AdminDashboard() {
   const [editValue, setEditValue] = useState<string>("");
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; type: string } | null>(null);
 
+  // Scroll View Individual Price Management State
+  const [scrollPrices, setScrollPrices] = useState<Record<string, string | number>>({});
+  const [savingPriceId, setSavingPriceId] = useState<string | null>(null);
+  const [savedPriceId, setSavedPriceId] = useState<string | null>(null);
+
   // Payments State
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [paymentTransactions, setPaymentTransactions] = useState<any[]>([]);
@@ -272,6 +277,45 @@ export default function AdminDashboard() {
     setEditValue(currentPrice.toString());
   };
 
+  const handleSaveScrollPrice = async (templateId: string) => {
+    const rawPrice = scrollPrices[templateId];
+    const template = (data?.templates || []).find((t: any) => t.id === templateId);
+    const priceToSave = rawPrice !== undefined && rawPrice !== "" ? rawPrice : template?.price;
+
+    if (priceToSave === undefined || priceToSave === "") {
+      alert("Please enter a valid price");
+      return;
+    }
+
+    setSavingPriceId(templateId);
+    try {
+      const res = await fetch("/api/admin/update-price", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "template",
+          id: templateId,
+          price: priceToSave,
+        }),
+      });
+
+      if (res.ok) {
+        setSavedPriceId(templateId);
+        setTimeout(() => {
+          setSavedPriceId((curr) => (curr === templateId ? null : curr));
+        }, 2500);
+        await fetchData();
+      } else {
+        const json = await res.json().catch(() => ({}));
+        alert(json.error || "Failed to save price");
+      }
+    } catch (e) {
+      alert("Error saving price");
+    } finally {
+      setSavingPriceId(null);
+    }
+  };
+
   const uploadFile = async (file: File, folder: string = 'Cards'): Promise<string | null> => {
     setUploadingFile(true);
     try {
@@ -376,12 +420,17 @@ export default function AdminDashboard() {
   const currentCategoryCards = (activeCategory === "all"
     ? data.templates
     : data.templates.filter((t: any) => t.category?.id === activeCategory)
-  ).filter((t: any) => (t.experienceType || '').toLowerCase() !== 'scroll' && (t.experienceType || '').toLowerCase() !== 'scroll_story');
+  ).filter((t: any) => {
+    const exp = (t.experienceType || '').toLowerCase();
+    const slug = (t.slug || '').toLowerCase();
+    return exp !== 'scroll' && exp !== 'scroll_story' && !slug.includes('scroll');
+  });
 
-  // Scroll View templates strictly sourced from database (ensuring deleted cards stay deleted)
+  // Scroll View templates strictly sourced from database
   const scrollTemplates = (data.templates || []).filter((t: any) => {
     const exp = (t.experienceType || '').toLowerCase();
-    return exp === 'scroll' || exp === 'scroll_story';
+    const slug = (t.slug || '').toLowerCase();
+    return exp === 'scroll' || exp === 'scroll_story' || slug.includes('scroll');
   });
 
   const renderScrollAdminThumbnail = (slug: string) => {
@@ -848,112 +897,75 @@ export default function AdminDashboard() {
 
           {/* Scroll View Tab (Price Management) */}
           {activeTab === "scroll_views" && (
-            <div className="space-y-6">
-              <div className="p-4 bg-white rounded-2xl border border-[#D4AF37]/30 shadow-xs flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-base text-[#2C2623] flex items-center gap-2">
-                    <Scroll className="w-5 h-5 text-[#8C4A52]" /> Scroll View Templates ({scrollTemplates.length})
-                  </h3>
-                  <p className="text-xs text-[#7C7267] mt-0.5">
-                    Set the individual prices for each vertical scrolling invitation story.
-                  </p>
-                </div>
-                <span className="text-xs font-bold text-[#8C4A52] bg-[#F9F0EC] px-3 py-1.5 rounded-full border border-[#D4AF37]/30">
-                  Fixed Architecture (Prices Editable)
-                </span>
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h3 className="font-bold text-lg text-[#2C2623] flex items-center gap-2">
+                  <Scroll className="w-5 h-5 text-[#8C4A52]" /> Scroll View Templates ({scrollTemplates.length})
+                </h3>
+                <p className="text-xs text-[#7C7267] mt-1">
+                  Manage individual pricing for all vertical scrolling invitation templates.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {scrollTemplates.map((t: any) => (
-                  <div key={t.id} className="bg-white rounded-2xl border border-[#D4AF37]/20 p-5 shadow-soft-surface flex flex-col group relative overflow-hidden">
-                    <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden mb-4 border border-stone-200">
-                      {renderScrollAdminThumbnail(t.slug)}
-                      <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm text-[#8C4A52] font-bold px-2.5 py-1 rounded-md text-xs border border-[#D4AF37]/40 shadow-xs">
-                        ৳{t.price}
-                      </div>
-                      <div className="absolute top-2 left-2 bg-[#8C4A52] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
-                        <Scroll className="w-2.5 h-2.5" /> Scroll
-                      </div>
-                    </div>
+              <div className="bg-white rounded-2xl border border-[#D4AF37]/30 shadow-xs overflow-hidden divide-y divide-stone-100">
+                {scrollTemplates.map((t: any) => {
+                  const currentPriceValue = scrollPrices[t.id] !== undefined ? scrollPrices[t.id] : t.price;
+                  const isSaving = savingPriceId === t.id;
+                  const isSaved = savedPriceId === t.id;
 
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h4 className="font-bold text-base leading-tight mb-1">{t.name}</h4>
-                        <span className="text-[10px] font-bold text-[#8C4A52] uppercase bg-[#F9F0EC] px-2 py-0.5 rounded-md border border-[#D4AF37]/20 inline-block">
-                          {typeof t.category === 'object' ? (t.category?.name || t.category?.slug || 'Wedding') : (t.category || 'Wedding')}
-                        </span>
+                  return (
+                    <div
+                      key={t.id}
+                      className="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#FAF8F5]/60 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm sm:text-base text-[#2C2623] truncate">
+                          {t.name}
+                        </h4>
                       </div>
-                    </div>
 
-                    {editingPrice === t.id ? (
-                      <div className="mt-auto flex gap-2">
-                        <input
-                          type="number"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="w-full px-3 py-2 border border-[#D4AF37]/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#8C4A52] text-sm font-bold"
-                          autoFocus
-                          placeholder="Price in ৳"
-                        />
-                        <button
-                          onClick={() => handlePriceUpdate('template', t.id)}
-                          className="px-4 py-2 rounded-xl bg-[#8C4A52] text-white font-bold hover:bg-[#7a3e45] transition-colors text-sm shadow-sm"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setEditingPrice(null)}
-                          className="px-3 py-2 rounded-xl bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors text-sm shadow-sm"
-                        >
-                          X
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="mt-auto flex flex-col gap-2">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              let music = null;
-                              try {
-                                const parsed = JSON.parse(t.assetManifest || "{}");
-                                music = parsed?.music;
-                              } catch { }
-                              setCardModal({
-                                isOpen: true,
-                                isEditing: true,
-                                id: t.id,
-                                name: t.name,
-                                categoryId: t.category?.id || data.categories[0]?.id || "",
-                                price: t.price.toString(),
-                                previewImageUrl: t.previewImageUrl,
-                                experienceType: t.experienceType || "SCROLL",
-                                revealMode: "sequential",
-                                photoFrameStyle: t.archetype || "classic_editorial",
-                                music: music || null
-                              });
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="relative flex items-center">
+                          <span className="absolute left-3 text-sm font-bold text-[#8C4A52]">৳</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="50"
+                            value={currentPriceValue}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setScrollPrices((prev) => ({ ...prev, [t.id]: val }));
                             }}
-                            className="flex-1 py-2 rounded-xl bg-[#8C4A52] text-white font-bold flex items-center justify-center gap-1.5 hover:bg-[#7a3e45] transition-colors text-xs shadow-sm"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" /> Edit Card
-                          </button>
-                          <button
-                            onClick={() => setDeleteModal({ isOpen: true, id: t.id, type: 'template' })}
-                            className="px-3 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-colors shadow-sm"
-                            title="Delete Scroll Card"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            className="w-32 pl-7 pr-3 py-2 bg-[#FAF8F5] border border-[#D4AF37]/40 rounded-xl text-sm font-bold text-[#2C2623] focus:outline-none focus:ring-2 focus:ring-[#8C4A52] focus:bg-white transition-all"
+                            placeholder="Price"
+                          />
                         </div>
+
                         <button
-                          onClick={() => startEditing(t.id, t.price)}
-                          className="w-full py-1.5 rounded-lg border border-gray-200 text-gray-600 font-bold text-[11px] hover:bg-gray-50 transition-colors"
+                          onClick={() => handleSaveScrollPrice(t.id)}
+                          disabled={isSaving}
+                          className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-xs flex items-center gap-1.5 ${
+                            isSaved
+                              ? "bg-emerald-600 text-white"
+                              : "bg-[#8C4A52] text-white hover:bg-[#7a3e45] active:scale-95"
+                          } disabled:opacity-60 disabled:cursor-not-allowed`}
                         >
-                          Quick Price: ৳{t.price}
+                          {isSaving ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                            </>
+                          ) : isSaved ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" /> Saved
+                            </>
+                          ) : (
+                            "Save"
+                          )}
                         </button>
                       </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
