@@ -2,9 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { TEMPLATE_DEFINITIONS } from "./template-definitions";
 
 const DEFAULT_SCROLL_PRICES: Record<string, number> = {
-  "patachitra-royal-scroll": 2000,
   "modern-editorial-scroll": 2200,
-  "carnival-haldi-scroll": 1800,
   "cosmic-midnight-scroll": 2500,
   "scrapbook-botanical-scroll": 2100,
   "scroll-experience": 2000,

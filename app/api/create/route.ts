@@ -22,6 +22,7 @@ export async function GET() {
     }
 
     const templates = await prisma.template.findMany({
+      where: { isActive: true },
       include: { category: true }
     });
     const animations = await prisma.animation.findMany();

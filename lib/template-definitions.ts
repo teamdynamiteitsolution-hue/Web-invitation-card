@@ -20,22 +20,6 @@ export interface TemplateDefinition {
 
 export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
   {
-    id: 'tmpl-01-royal-grandeur',
-    slug: 'patachitra-royal-scroll',
-    name: 'The Royal Grandeur Scroll',
-    category: 'wedding',
-    description: 'Majestic royal palace archway, gold foil detailing, monogram seal, and full ceremonial itinerary.',
-    experienceType: 'SCROLL',
-    compositionId: 'scroll_full_flow',
-    previewImageUrl: '/assets/categories/wedding.webp',
-    imageSlots: [
-      { id: 'couplePhoto', label: 'Hero Couple Photo (Optional)', description: 'Shown in the opening hero presentation', required: false },
-      { id: 'groomPhoto', label: 'Groom Photo', description: 'Shown in the Couple section', required: true },
-      { id: 'bridePhoto', label: 'Bride Photo', description: 'Shown in the Couple section', required: true },
-    ],
-    textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
-  },
-  {
     id: 'tmpl-02-modern-editorial',
     slug: 'modern-editorial-scroll',
     name: 'Modern Editorial Vogue Scroll',
@@ -48,22 +32,6 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
       { id: 'couplePhoto', label: 'Cover Couple Photo', description: 'Editorial cover image', required: false },
       { id: 'bridePhoto', label: 'Bride Portrait', description: 'Profile feature', required: true },
       { id: 'groomPhoto', label: 'Groom Portrait', description: 'Profile feature', required: true },
-    ],
-    textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
-  },
-  {
-    id: 'tmpl-03-golden-haldi',
-    slug: 'carnival-haldi-scroll',
-    name: 'Festive Marigold Dhol Scroll',
-    category: 'holud',
-    description: 'Vibrant turmeric yellow and marigold celebration scroll with Haldi, Mehendi and Sangeet rituals.',
-    experienceType: 'SCROLL',
-    compositionId: 'scroll_full_flow',
-    previewImageUrl: '/assets/categories/haldi.webp',
-    imageSlots: [
-      { id: 'couplePhoto', label: 'Celebration Hero Photo', description: 'Festive hero banner photo', required: false },
-      { id: 'groomPhoto', label: 'Groom Photo', description: 'Holud portrait', required: true },
-      { id: 'bridePhoto', label: 'Bride Photo', description: 'Holud portrait', required: true },
     ],
     textSlots: ['brideName', 'groomName', 'date', 'time', 'venue', 'venueAddress', 'invitationMessage', 'rsvpContact']
   },

@@ -175,20 +175,6 @@ export const DesignTab = ({ templates }: { templates: any[] }) => {
 
           // Dedicated accurate visual banner for each scroll template
           const renderScrollThumbnail = () => {
-            if (tmpl.slug === 'patachitra-royal-scroll' || tmpl.slug === 'royal-grandeur-scroll') {
-              return (
-                <div className="w-full h-full bg-gradient-to-b from-[#1F1714] via-[#35251F] to-[#120D0B] text-[#FAF6F0] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden border border-[#D4AF37]/50">
-                  <div className="text-xl text-[#D4AF37]">👑 ⚜</div>
-                  <div>
-                    <span className="text-[8px] uppercase tracking-widest font-bold block text-[#D4AF37]">Royal Proclamation</span>
-                    <h5 className="font-bold text-xs leading-tight text-white font-serif">{tmpl.name}</h5>
-                  </div>
-                  <span className="text-[8px] bg-[#D4AF37]/25 border border-[#D4AF37]/60 px-2 py-0.5 rounded-full font-bold uppercase self-center text-[#D4AF37]">
-                    Parchment Decree
-                  </span>
-                </div>
-              );
-            }
             if (tmpl.slug === 'modern-editorial-scroll') {
               return (
                 <div className="w-full h-full bg-[#111111] text-white flex flex-col justify-between p-3 select-none text-center relative overflow-hidden border border-neutral-700">
@@ -203,7 +189,7 @@ export const DesignTab = ({ templates }: { templates: any[] }) => {
                 </div>
               );
             }
-            if (tmpl.slug === 'carnival-haldi-scroll' || tmpl.slug === 'golden-haldi-scroll' || tmpl.slug === 'haldi-scroll') {
+            if (tmpl.slug === 'haldi-scroll' || tmpl.slug === 'golden-haldi-scroll') {
               return (
                 <div className="w-full h-full bg-gradient-to-b from-[#FEF08A] via-[#FACC15] to-[#CA8A04] text-[#713F12] flex flex-col justify-between p-3 select-none text-center relative overflow-hidden">
                   <div className="text-xl">🌼 🥁</div>

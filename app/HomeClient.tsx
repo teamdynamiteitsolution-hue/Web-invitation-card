@@ -1,15 +1,34 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, PlayCircle, ArrowRightCircle, Check } from "lucide-react";
+import { Sparkles, ArrowRight, PlayCircle, ArrowRightCircle, Check, X } from "lucide-react";
 import { Footer } from "@/components/Footer";
 
 
 export default function HomeClient({ categories, templates, animations }: { categories: any[], templates: any[], animations: any[] }) {
-  const featuredTemplates = (templates || []).filter((t: any) => {
-    const exp = (t.experienceType || '').toLowerCase();
-    return exp !== 'scroll' && exp !== 'scroll_story';
+  const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
+
+  // Lock background scroll and listen to Escape key when modal is open
+  useEffect(() => {
+    if (!previewTemplate) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPreviewTemplate(null);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [previewTemplate]);
+
+  // Real active admin card templates from database
+  const galleryTemplates = (templates || []).filter((t: any) => {
+    if (!t || t.isActive === false) return false;
+    const exp = (t.experienceType || "").toLowerCase();
+    const slug = (t.slug || "").toLowerCase();
+    return exp !== "scroll" && exp !== "scroll_story" && !slug.includes("scroll");
   });
 
   return (
@@ -158,36 +177,87 @@ export default function HomeClient({ categories, templates, animations }: { cate
           </div>
 
           <div className="flex overflow-x-auto pb-8 gap-6 hide-scrollbar px-4 snap-x snap-mandatory">
-            {featuredTemplates.map((template) => (
-              <div key={template.id} className="min-w-[280px] sm:min-w-[320px] bg-white rounded-[24px] overflow-hidden shadow-soft-surface snap-center flex flex-col border border-gray-100">
-                <div className="relative w-full aspect-[4/5] overflow-hidden">
-                  {template.isFeatured && (
-                    <div className="absolute top-4 left-4 z-10 bg-[#D4AF37]/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 backdrop-blur-sm shadow-sm">
-                      <Sparkles className="w-3 h-3" /> Most Popular
+            {galleryTemplates.map((template: any) => (
+              <div
+                key={template.id}
+                onClick={() => setPreviewTemplate(template)}
+                className="min-w-[280px] sm:min-w-[320px] max-w-[320px] bg-white rounded-2xl sm:rounded-[24px] border border-[#D4AF37]/20 overflow-hidden shadow-soft-surface hover:shadow-floating-ceremony transition-all duration-500 flex flex-col cursor-pointer group snap-center"
+              >
+                {/* Visual Preview */}
+                <div className="relative w-full aspect-[4/5] bg-gradient-to-b from-[#F9F0EC] to-[#E8D8D0] overflow-hidden flex items-center justify-center p-3 sm:p-6">
+                  <div className="absolute inset-0 bg-[url('/assets/textures/handmade-fiber.webp')] opacity-40 mix-blend-multiply pointer-events-none" />
+                  
+                  {template.previewImageUrl ? (
+                    <img
+                      src={template.previewImageUrl}
+                      alt={template.name}
+                      className="w-full h-full object-contain filter drop-shadow-xl transform group-hover:scale-105 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-[#7C7267]">
+                      <div className="w-12 h-12 rounded-full bg-white/70 border border-[#D4AF37]/30 flex items-center justify-center mb-2">
+                        <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+                      </div>
+                      <span className="text-xs font-serif italic">Preview coming soon</span>
                     </div>
                   )}
-                  <img src={template.previewImageUrl} alt={template.name} className="w-full h-full object-cover" />
+
+                  {template.isFeatured && (
+                    <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 bg-[#8C4A52] text-[#F9F0D0] text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-sm">
+                      Featured
+                    </div>
+                  )}
                 </div>
-                <div className="p-6 flex flex-col justify-between flex-1">
+
+                {/* Details */}
+                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-bold text-[#2C2623] text-lg mb-1">{template.name}</h3>
-                    <p className="text-gray-500 text-sm font-serif">{template.description}</p>
+                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                      <span className="text-[10px] sm:text-xs font-bold text-[#8C4A52] uppercase tracking-wider truncate">
+                        {template.category?.name || "Invitation"}
+                      </span>
+                      <span className="text-xs sm:text-sm font-bold text-[#2C2623]" style={{ fontFamily: 'Cinzel, serif' }}>
+                        ৳{template.price}
+                      </span>
+                    </div>
+                    
+                    <h3 className="text-sm sm:text-base font-bold text-[#2C2623] mb-1 sm:mb-1.5 line-clamp-1" style={{ fontFamily: 'Cinzel, serif' }}>
+                      {template.name}
+                    </h3>
+                    
+                    {template.description && (
+                      <p className="text-xs font-serif italic text-[#7C7267] mb-3 line-clamp-2">
+                        {template.description}
+                      </p>
+                    )}
                   </div>
-                  <Link href={`/templates/${template.slug}`} className="mt-4 flex items-center justify-end gap-1 text-[#D4AF37] text-xs font-bold hover:text-[#8C4A52] transition-colors">
-                    Example Invite <ArrowRight className="w-3 h-3" />
-                  </Link>
+                  
+                  <div className="pt-3 border-t border-[#D4AF37]/20 flex items-center justify-between mt-auto">
+                    {template.compatibilities && template.compatibilities.length > 0 ? (
+                      <span className="text-[10px] sm:text-xs font-semibold text-[#7C7267] truncate">
+                        {template.compatibilities.length} Styles
+                      </span>
+                    ) : (
+                      <span className="text-[10px] sm:text-xs font-serif text-[#7C7267]/60 truncate italic">
+                        No styles
+                      </span>
+                    )}
+                    
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewTemplate(template);
+                      }}
+                      className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-[#F9F0EC] text-[#2C2623] border border-[#D4AF37]/30 flex items-center justify-center group-hover:bg-[#8C4A52] group-hover:text-white transition-colors shadow-xs cursor-pointer"
+                      aria-label={`Preview ${template.name}`}
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
-            
-            {/* Custom Photo Upload Card */}
-            <div className="min-w-[280px] sm:min-w-[320px] bg-[#FAF8F5] rounded-[24px] shadow-inner border border-dashed border-[#D4AF37]/50 snap-center flex flex-col items-center justify-center p-8 text-center cursor-pointer hover:bg-white transition-colors">
-              <h3 className="font-bold text-[#2C2623] text-xl mb-2" style={{ fontFamily: 'Cinzel, serif' }}>Your Photo</h3>
-              <p className="text-gray-500 font-serif italic mb-6">Upload any image or video</p>
-              <div className="w-12 h-12 rounded-full border border-[#D4AF37] text-[#D4AF37] flex items-center justify-center">
-                <Sparkles className="w-5 h-5" />
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -349,6 +419,106 @@ export default function HomeClient({ categories, templates, animations }: { cate
           </div>
         </div>
       </section>
+
+      {/* Template Preview Modal Popup */}
+      {previewTemplate && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => setPreviewTemplate(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={previewTemplate.name}
+        >
+          <div
+            className="relative w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-[#D4AF37]/30 flex flex-col md:flex-row max-h-[90vh] animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setPreviewTemplate(null)}
+              className="absolute top-3.5 right-3.5 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-[#D4AF37]/30 text-[#2C2623] hover:bg-[#8C4A52] hover:text-white transition-colors flex items-center justify-center shadow-md cursor-pointer"
+              aria-label="Close Preview"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Left Column: Large Preview Visual */}
+            <div className="relative w-full md:w-1/2 aspect-[4/5] bg-gradient-to-b from-[#F9F0EC] to-[#E8D8D0] p-6 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="absolute inset-0 bg-[url('/assets/textures/handmade-fiber.webp')] opacity-40 mix-blend-multiply pointer-events-none" />
+              {previewTemplate.previewImageUrl ? (
+                <img
+                  src={previewTemplate.previewImageUrl}
+                  alt={previewTemplate.name}
+                  className="w-full h-full object-contain filter drop-shadow-xl"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-[#7C7267]">
+                  <div className="w-16 h-16 rounded-full bg-white/70 border border-[#D4AF37]/30 flex items-center justify-center mb-3">
+                    <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+                  </div>
+                  <span className="text-sm font-serif italic">Preview coming soon</span>
+                </div>
+              )}
+              {previewTemplate.isFeatured && (
+                <div className="absolute top-3.5 left-3.5 bg-[#8C4A52] text-[#F9F0D0] text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm">
+                  Featured
+                </div>
+              )}
+            </div>
+
+            {/* Right Column: Template Info & Actions */}
+            <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between bg-white overflow-y-auto">
+              <div>
+                <div className="inline-block px-3 py-1 rounded-full border border-[#D4AF37]/40 bg-[#F9F0EC] text-[#8C4A52] text-[11px] font-bold tracking-wider uppercase mb-3">
+                  {previewTemplate.category?.name || "Invitation Collection"}
+                </div>
+                <h3
+                  className="text-2xl sm:text-3xl font-bold text-[#2C2623] mb-2 leading-tight"
+                  style={{ fontFamily: "Cinzel, serif" }}
+                >
+                  {previewTemplate.name}
+                </h3>
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-2xl sm:text-3xl font-bold text-[#8C4A52]">
+                    ৳{previewTemplate.price}
+                  </span>
+                  <span className="text-xs text-[#7C7267] font-serif">One-time payment</span>
+                </div>
+                {previewTemplate.description && (
+                  <p className="text-sm text-[#7C7267] font-serif italic mb-6 leading-relaxed border-l-2 border-[#D4AF37]/40 pl-3">
+                    {previewTemplate.description}
+                  </p>
+                )}
+                {previewTemplate.compatibilities && previewTemplate.compatibilities.length > 0 && (
+                  <div className="mb-6 p-3 rounded-2xl bg-[#FAF8F5] border border-[#D4AF37]/20 text-xs font-semibold text-[#7C7267] flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#D4AF37] flex-shrink-0" />
+                    <span>{previewTemplate.compatibilities.length} Ceremonial Opening Styles Supported</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 border-t border-gray-100 flex flex-col gap-2.5">
+                <Link
+                  href={`/create?template=${previewTemplate.slug}`}
+                  className="w-full py-3.5 px-6 rounded-full bg-[#8C4A52] text-white font-bold text-sm shadow-md hover:bg-[#7a3e45] transition-all flex items-center justify-center gap-2 active:scale-98"
+                >
+                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Create Invitation with this Design</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTemplate(null)}
+                  className="w-full py-2.5 text-xs text-[#7C7267] hover:text-[#2C2623] font-semibold transition-colors cursor-pointer"
+                >
+                  Continue Browsing
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </main>

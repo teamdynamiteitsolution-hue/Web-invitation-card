@@ -5,15 +5,34 @@ import HomeClient from "./HomeClient";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const categories = await prisma.eventCategory.findMany({
-    orderBy: { sortOrder: 'asc' }
-  });
+  let categories;
+  let templates;
+  let animations;
 
-  const templates = await prisma.template.findMany({
-    include: { category: true }
-  });
-
-  const animations = await prisma.animation.findMany();
+  try {
+    [categories, templates, animations] = await Promise.all([
+      prisma.eventCategory.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: "asc" },
+      }),
+      prisma.template.findMany({
+        where: { isActive: true },
+        include: {
+          category: true,
+          compatibilities: {
+            include: { animation: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.animation.findMany({
+        where: { isActive: true },
+      }),
+    ]);
+  } catch (error) {
+    console.error("[HomePage] Failed to fetch homepage data from database:", error);
+    throw new Error("Unable to load invitation templates and categories. Please try again.");
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#2C2623] font-sans overflow-x-clip selection:bg-[#D4AF37]/30">

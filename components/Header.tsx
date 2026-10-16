@@ -3,6 +3,7 @@ import { ArrowRight, User } from "lucide-react";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { MobileNavDrawer } from "./MobileNavDrawer";
+import { NavLinks } from "./NavLinks";
 
 export async function Header() {
   const cookieStore = cookies();
@@ -27,12 +28,7 @@ export async function Header() {
         উৎসব
       </Link>
 
-      <nav className="hidden md:flex items-center gap-7 lg:gap-8 font-serif text-[#7C7267] text-sm tracking-wide">
-        <Link href="/" className="hover:text-[#D4AF37] transition-colors">Home</Link>
-        <Link href="/templates" className="hover:text-[#D4AF37] transition-colors">Templates</Link>
-        <Link href="/how-it-works" className="hover:text-[#D4AF37] transition-colors">How It Works</Link>
-        <Link href="/contact" className="hover:text-[#D4AF37] transition-colors">Contact Us</Link>
-      </nav>
+      <NavLinks />
 
       <div className="flex items-center gap-2.5 sm:gap-4">
         {username ? (
